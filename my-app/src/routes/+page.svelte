@@ -13,8 +13,10 @@
     <p>Here are some websites I made</p>
 
     <p>My Youtube Channels</p>
+    
+    <nav>
+      <a href="/Youtube_Things">My Youtube Stuff!</a>
+    </nav>
+
   </main>
   
-  <nav>
-    <a href="/Youtube_Things">My Youtube Stuff!</a>
-  </nav>
