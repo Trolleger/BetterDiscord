@@ -20,3 +20,12 @@
 
   </main>
   
+<!-- IF YOU WANT TO PUSH, THE COMMANDS ARE
+ git add .
+ git commit -m "(what ever message you pick)" 
+ git push origin main
+ DO NOT USE NORMAL WINDOWS SETTING THINGY THAT STUFF DONT WORK.
+ To run the server do:
+ cd my-app
+ npm run dev-->
+ 
