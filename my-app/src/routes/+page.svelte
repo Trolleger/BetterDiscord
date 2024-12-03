@@ -4,50 +4,57 @@
   
   <style>
     h1 {
-      font-size: large;
+      font-size: 3.5em;
       color: blue;
       text-align: center;
+      -webkit-text-stroke: 1px black;
+      
     }
-    
+    main{
+      background-image: -webkit-repeating-linear-gradient(purple,red);
+    }
+     
     /* Your styles can go here if you'd like to add any */
   </style>
   
   <main>
-    <h1>~~~ This Is My Homepage For All My Stuff, Hope You Enjoy -Trolleger ~~~</h1>
+
+    <h1>This Is My Homepage And Portfolio For All My Things, Enjoy!</h1>
     
-    <p>
-      Hello! I'm Andrew, a passionate student with a wide range of interests. I’m committed to continuous learning, growing my businesses, and always improving myself. Below, you'll find a collection of my certifications, projects, coding achievements, content creation work, and much more! I hope you enjoy and check out the whole website :)
-    </p>
+    <p style = "font-size: 2em">  
+      Hello! I'm Andrew, an Orthodox Christian and a passionate student with a wide range of interests. I’m committed to continuous learning, growing my businesses, and always improving myself. Below, you'll find a collection of my certifications, projects, coding achievements, content creation work, and much more! I hope you enjoy the website. And if you want to contact me, refer to the contact me button at the bottom.
     <br>
     <br>
-    <h2 style="text-align:center">Here are some websites I made</h2>
+    <a style="font-size: 6rem; text-align: center; display: block; margin: 0 auto;" href="/Websites_Things">A Directory for All My Websites</a>
+
     <br>
 
-    <p>Down below are my Youtube Channels!</p> 
+    <h2 style="text-align:center; font-size: 80px"> Down below are my youtube channels</h2> 
     
     <nav>
-      <span style="display: flex; justify-content: space-around; align-items: center; gap: 20px; text-align: center;">
-        <a href="/Youtube_Things/Main_Minecraft_Channel" title="Visit My Minecraft Channel" style="text-decoration: none; color: #333; font-weight: bold; display: flex; flex-direction: column; align-items: center;">
-          <img src="/IMAGES_FOR_YOUTUBE_SECTION/channels_profile_for_main_minecraft_channel.jpg" 
-               alt="Profile pic for my Minecraft channel" 
-               style="border-radius: 50%; width: 150px; height: 150px; object-fit: cover; margin-bottom: 10px;">
-          My Minecraft Channel!
+      <span style="display: flex; justify-content: space-around; align-items: center; gap: 40px; text-align: center;">
+        <a href="/Youtube_Things/Main_Minecraft_Channel" title="Visit My Minecraft Channel" style="text-decoration: none; font-weight: bold; display: flex; flex-direction: column; align-items: center; font-size: 30px">
+            <img src="/IMAGES_FOR_YOUTUBE_SECTION/channels_profile_for_main_minecraft_channel.jpg" 
+                 alt="Profile pic for my Minecraft channel" 
+                 style="border-radius: 50%; width: 300px; height: 300px; object-fit: cover; margin-bottom: 20px;">
+            My Minecraft Channel!
         </a>
     
-        <a href="/Youtube_Things/Conspiracy_And_Random_Channel" title="Visit My Conspiracy and Random Channel" style="text-decoration: none; color: #333; font-weight: bold; display: flex; flex-direction: column; align-items: center;">
-          <img src="/IMAGES_FOR_YOUTUBE_SECTION/channels_profile_pic_for_random_and_conspiracy_channel.jpg" 
-               alt="Profile pic for my variety gaming channel" 
-               style="border-radius: 50%; width: 150px; height: 150px; object-fit: cover; margin-bottom: 10px;">
-          My Conspiracy and Random Channel!
+        <a href="/Youtube_Things/Conspiracy_And_Random_Channel" title="Visit My Conspiracy and Random Channel" style="text-decoration: none; font-weight: bold; display: flex; flex-direction: column; align-items: center; font-size: 30px">
+            <img src="/IMAGES_FOR_YOUTUBE_SECTION/channels_profile_pic_for_random_and_conspiracy_channel.jpg" 
+                 alt="Profile pic for my variety gaming channel" 
+                 style="border-radius: 50%; width: 300px; height: 300px; object-fit: cover; margin-bottom: 20px;">
+            My Conspiracy and Random Channel!
         </a>
     
-        <a href="/Youtube_Things/Variety_Gaming_Channel" title="Visit My Variety Gaming Channel" style="text-decoration: none; color: #333; font-weight: bold; display: flex; flex-direction: column; align-items: center;">
-          <img src="/IMAGES_FOR_YOUTUBE_SECTION/channels_profile_pic_for_variety_gaming_channel.jpg" 
-               alt="Profile pic for my random and conspiracy channel" 
-               style="border-radius: 50%; width: 150px; height: 150px; object-fit: cover; margin-bottom: 10px;">
-          My Variety Gaming Channel!
+        <a href="/Youtube_Things/Variety_Gaming_Channel" title="Visit My Variety Gaming Channel" style="text-decoration: none; font-weight: bold; display: flex; flex-direction: column; align-items: center; font-size: 30px">
+            <img src="/IMAGES_FOR_YOUTUBE_SECTION/channels_profile_pic_for_variety_gaming_channel.jpg" 
+                 alt="Profile pic for my random and conspiracy channel" 
+                 style="border-radius: 50%; width: 300px; height: 300px; object-fit: cover; margin-bottom: 20px;">
+            My Variety Gaming Channel!
         </a>
-      </span>
+    </span>
+    
     </nav>
     
 
