@@ -25,7 +25,7 @@
       Hello! I'm Andrew, an Orthodox Christian and a passionate student with a wide range of interests. I’m committed to continuous learning, growing my businesses, and always improving myself. Below, you'll find a collection of my certifications, projects, coding achievements, content creation work, and much more! I hope you enjoy the website. And if you want to contact me, refer to the contact me button at the bottom.
     <br>
     <br>
-    <a style="font-size: 6rem; text-align: center; display: block; margin: 0 auto;" href="/Websites_Things">A Directory for All My Websites</a>
+    <a style="font-size: 6rem; text-align: center; display: block; margin: 0 auto;" href="/Websites_Things">🌐A Directory for All My Websites🌐</a>
 
     <br>
 
@@ -39,7 +39,7 @@
                  style="border-radius: 50%; width: 300px; height: 300px; object-fit: cover; margin-bottom: 20px;">
             My Minecraft Channel!
         </a>
-    
+        
         <a href="/Youtube_Things/Conspiracy_And_Random_Channel" title="Visit My Conspiracy and Random Channel" style="text-decoration: none; font-weight: bold; display: flex; flex-direction: column; align-items: center; font-size: 30px">
             <img src="/IMAGES_FOR_YOUTUBE_SECTION/channels_profile_pic_for_random_and_conspiracy_channel.jpg" 
                  alt="Profile pic for my variety gaming channel" 
