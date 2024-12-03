@@ -28,7 +28,9 @@
     
     <nav>
       <span>
-      <a href="/Youtube_Things/Main_Minecraft_Channel">My Minecraft Channel!</a>
+      <a href="/Youtube_Things/Main_Minecraft_Channel">
+        <img src="static/IMAGES_FOR_YOUTUBE_SECTION/channels_profile_for_main_minecraft_channel.jpg" alt="profile picture for my mineccraft channel">
+        </a>
       <a href="/Youtube_Things/Conspiracy_And_Random_Channel">My Conspiracy And Random Channel!</a>
       <a href="/Youtube_Things/Variety_Gaming_Channel">My Variety Gaming Channel!</a> 
     </span>
