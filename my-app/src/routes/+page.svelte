@@ -19,7 +19,7 @@
   
   <main>
 
-    <h1>This Is My Homepage And Portfolio For All My Things, Enjoy!</h1>
+    <h1>This Is My Homepage And Portfolio For All My Things, Enjoy! Im always adding and changing stuff here.</h1>
     
     <p style = "font-size: 2em">  
       Hello! I'm Andrew, an Orthodox Christian and a passionate student with a wide range of interests. I’m committed to continuous learning, growing my businesses, and always improving myself. Below, you'll find a collection of my certifications, projects, coding achievements, content creation work, and much more! I hope you enjoy the website. And if you want to contact me, refer to the contact me button at the bottom.
