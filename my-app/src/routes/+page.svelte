@@ -21,13 +21,11 @@
 
     <h1>This Is My Homepage And Portfolio For All My Things, Enjoy! Im always adding and changing stuff here.</h1>
     
-    <p style = "font-size: 2em">  
-      Hello! I'm Andrew, an Orthodox Christian and a passionate student with a wide range of interests. I’m committed to continuous learning, growing my businesses, and always improving myself. Below, you'll find a collection of my certifications, projects, coding achievements, content creation work, and much more! I hope you enjoy the website. And if you want to contact me, refer to the contact me button at the bottom.
-    <br>
-    <br>
-    <a style="font-size: 6rem; text-align: center; display: block; margin: 0 auto;" href="/Websites_Things">🌐A Directory for All My Websites🌐</a>
+    <p style = "font-size: 2em; text-align: center">  
+     Hello! I'm Andrew, an Orthodox Christian and a passionate student with a wide range of interests. I’m committed to continuous learning, growing my businesses, and always improving myself. Below, you'll find a collection of my certifications, projects, coding achievements, content creation work, and much more! I hope you enjoy the website. And if you want to contact me, refer to the contact me button at the bottom.
+     </p>
 
-    <br>
+    <a style="font-size: 6rem; text-align: center; display: block; margin: 0 auto;" href="/Websites_Things">🌐A Directory for All My Websites🌐</a>
 
     <h2 style="text-align:center; font-size: 80px"> Down below are my youtube channels</h2> 
     
@@ -37,7 +35,7 @@
             <img src="/IMAGES_FOR_YOUTUBE_SECTION/channels_profile_for_main_minecraft_channel.jpg" 
                  alt="Profile pic for my Minecraft channel" 
                  style="border-radius: 50%; width: 300px; height: 300px; object-fit: cover; margin-bottom: 20px;">
-            My Minecraft Channel!!!
+            My Minecraft Channels!!!
         </a>
         
         <a href="/Youtube_Things/Conspiracy_And_Random_Channel" title="Visit My Conspiracy and Random Channel" style="text-decoration: none; font-weight: bold; display: flex; flex-direction: column; align-items: center; font-size: 30px">
@@ -56,6 +54,21 @@
     </span>
     
     </nav>
+    <div style="font-size: 3em; text-align: center">
+      MY CONTACTS:
+      <br>
+      EMAIL: Trolleger2@gmail.com
+      <br>
+      DISCORD: trolleger
+
+    </div>
+    
+    <footer style="font-size: 3em; text-align: center; background-color: black; color: white;">
+      COPYRIGHT, TROLLEGER 2025
+    </footer>
+    
+
+    
     
 
   </main>
