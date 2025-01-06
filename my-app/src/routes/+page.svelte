@@ -37,7 +37,7 @@
             <img src="/IMAGES_FOR_YOUTUBE_SECTION/channels_profile_for_main_minecraft_channel.jpg" 
                  alt="Profile pic for my Minecraft channel" 
                  style="border-radius: 50%; width: 300px; height: 300px; object-fit: cover; margin-bottom: 20px;">
-            My Minecraft Channel!
+            My Minecraft Channel!!!
         </a>
         
         <a href="/Youtube_Things/Conspiracy_And_Random_Channel" title="Visit My Conspiracy and Random Channel" style="text-decoration: none; font-weight: bold; display: flex; flex-direction: column; align-items: center; font-size: 30px">
