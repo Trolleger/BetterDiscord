@@ -38,14 +38,14 @@
 
   iframe {
     box-shadow: -1px 3px 28px -4px rgba(0, 0, 0, 0.76);
-    width: 48%; /* Adjust width to 48% to fit two videos side by side */
+    width: 50%; /* Adjust width to 48% to fit two videos side by side */
     height: 400px; /* Ensure the height is set properly */
     border-top-width: 0px;
     border-right-width: 0px;
     border-bottom-width: 0px;
     border-left-width: 0px;
     border-style: inset;
-    margin: 10px; /* Add margin to create space between the videos */
+    margin: 0px; /* Add margin to create space between the videos */
   }
 
   /* Container to hold iframes side by side */
@@ -69,8 +69,13 @@
 
   <div class="slide-right">
 
-    <h1 style="font-size: 3em; -webkit-text-stroke: 1px green; text-shadow: #32CD32 1px 0 80px;">Well I might as well, here are some of my more recent videos which I would say are pretty nice! (and theres more
-      information about the channel at the bottom ☺ hope you enjoy)</h1>
+    <h1 style="font-weight: bold; font-size: 3em; -webkit-text-stroke: 0.3px white; text-shadow: #32CD32 1px 0 80px; text-align: center">Well I might as well, here are some of my more recent videos which I would say are pretty nice! (and theres more
+      information about the channel at the bottom ☺) I really hope you enjoy my website. More Info Lower Down</h1>
+  
+      <h1 style="font-size: 4em; color: gold; text-align: center; text-shadow: 0 0 10px gold, 0 0 20px gold, 0 0 30px gold, 0 0 40px gold;">
+        Here are some of my videos!
+      </h1>
+      
 
     <!-- YouTube Video Embed with Simple Title Attribute -->
     <div class="iframe-container">
@@ -80,6 +85,8 @@
       <iframe src="https://www.youtube.com/embed/tppXzG1Bfnk" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="YouTube Video"></iframe>
       <iframe src="https://www.youtube.com/embed/uICefwuHpM8" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="YouTube Video"></iframe>
       <iframe src="https://www.youtube.com/embed/YlRIWUz40LA" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="YouTube Video"></iframe>
+      <iframe src="https://www.youtube.com/embed/aexTjGfnrq8" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="YouTube Video"></iframe>
+      <iframe src="https://www.youtube.com/embed/NYxTlJskLzc" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="YouTube Video"></iframe>
     </div>
 
     <p>
