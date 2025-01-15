@@ -64,7 +64,7 @@
   </a>
 
   <div class="slide-right">
-    <h1 style="font-size: 3em; color: yellow; text-align: center">
+    <h1 style="font-size: 3em; color: yellow; text-align: center;text-shadow: 6px 4px 40px; text-shadow: 6px 4px 15px;  ">
       Here are some of my favorite videos! (Information about the channel at bottom), that's all, enjoy! :)
     </h1>
 
@@ -80,7 +80,7 @@
       This is my random channel sort of, I just mess around with this channel and put schizo stuff on it. For example I made a video arguing
       with people on the Wynncraft discord server just saying bullshit which I DEFINITELY BELIEVE!!!!! /s/s/s/s/s Point is, I just put random nonsense
       on this youtube channel that does not fit on my gaming youtube channels but you can find some pretty interesting stuff on here :) Might start narrating
-      4chan stories or other cool stuff here. This channel is a bit of my playground.
+      4chan stories or other cool stuff here. This channel is a bit of my playground. That seems to be all for now
     </p>
   </div>
 </main> 

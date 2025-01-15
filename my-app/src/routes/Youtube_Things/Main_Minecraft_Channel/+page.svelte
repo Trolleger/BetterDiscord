@@ -58,12 +58,12 @@
 
 <main>
   <span>
-    <h1 style="font-size: 6em; text-align: center; color: maroon; font-family: Consolas, Monaco, monospace;">
+    <h1 style="font-size: 6em; text-align: center; color: maroon; -webkit-text-stroke: 4px black; font-family: Consolas, Monaco, monospace;">
       This is my Minecraft Channel
     </h1>
   </span>
 
-  <a style="font-size: 5.446em; text-align: center;" href="https://www.youtube.com/@Trolleger">
+  <a style="font-size: 5.446em; text-align: center; -webkit-text-stroke: 1px white" href="https://www.youtube.com/@Trolleger">
     A Link To My Minecraft Youtube Channel!
   </a>
 
