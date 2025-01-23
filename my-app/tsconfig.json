@@ -11,5 +11,10 @@
 		"strict": true,
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext"
+	},
+	"kit": {
+		"alias": {
+			"$routes": ".svelte-kit/types/src/routes"
+		}
 	}
 }
