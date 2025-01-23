@@ -25,7 +25,7 @@
      Hello! I'm Andrew, an Orthodox Christian and a passionate student with a wide range of interests. I’m committed to continuous learning, growing my businesses, and always improving myself. Below, you'll find a collection of my certifications, projects, coding achievements, content creation work, and much more! I hope you enjoy the website. And if you want to contact me, refer to the contact me button at the bottom.
      </p>
 
-    <a style="font-size: 6rem; text-align: center; display: block; margin: 0 auto;" href="/Websites_Things">🌐A Directory for All My Websites🌐</a>
+    <a style="font-size: 5.2rem; text-align: center; display: block; margin: 0 auto;" href="/Websites_Things">🌐A DIRECTORY FOR ALL MY WEBSITES🌐</a>
 
     <h2 style="text-align:center; font-size: 80px"> Down below are my youtube channels</h2> 
     
@@ -52,16 +52,26 @@
             My Variety Gaming Channel!
         </a>
     </span>
+
+    <p style="text-align: center"> this website is still a work in progress but I hope you enjoy it</p>
     
     </nav>
-    <div style="font-size: 3em; text-align: center">
-      MY CONTACTS:
-      <br>
-      EMAIL: Trolleger2@gmail.com
-      <br>
-      DISCORD: trolleger
+    <div style="font-size: 3em; text-align: center;">
 
-    </div>
+      
+      <div style="display: flex; align-items: center; justify-content: center;">
+          <img src="IMAGES_FOR_YOUTUBE_SECTION/Gmail Logo.png" alt="Gmail Logo" style="width: 50px; height: 50px; ">
+          <span>EMAIL: Trolleger2@gmail.com</span>
+          <img src="IMAGES_FOR_YOUTUBE_SECTION/Gmail Logo.png" alt="Gmail Logo" style="width: 50px; height: 50px;">
+      </div>
+   
+      <div style="display: flex; align-items: center; justify-content: center;">
+        <img src="IMAGES_FOR_YOUTUBE_SECTION/Discord Logo.png" alt="Discord Logo" style="width: 50px; height: 50px;">
+          <span>DISCORD: trolleger</span>
+          <img src="IMAGES_FOR_YOUTUBE_SECTION/Discord Logo.png" alt="Discord Logo" style="width: 50px; height: 50px;">
+   
+      </div>
+  </div>
     
     <footer style="font-size: 3em; text-align: center; background-color: black; color: white;">
       COPYRIGHT, TROLLEGER 2025

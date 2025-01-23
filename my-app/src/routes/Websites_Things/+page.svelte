@@ -2,7 +2,7 @@
     import "@fontsource/courier-prime";
 </script>
 
-<main>
+<main>  
     <p>
         My Websites! When you click on any of the links it will lead you to more
         information about the website along with the actual URL of the website
@@ -35,7 +35,7 @@
 <style>
     main {
         background-image: -webkit-linear-gradient(90deg, #000080, royalblue);
-        height: 100vh;
+        height: 100vh;                
         text-align: center;
     }
     p {
