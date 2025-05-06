@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "expo": ["./node_modules/expo"],
+      "expo-modules-core": ["./node_modules/expo-modules-core"]
+    },
+    // Add these new options:
+    "lib": ["dom", "esnext"],
+    "types": ["jest", "node"],
+    "noEmit": true, // Prevents emitting JS files (handled by Webpack/Babel)
+    "incremental": true // Faster TypeScript compilation
+  },
+  "include": ["src/**/*", "types/**/*"],
+  "exclude": ["node_modules", "**/__tests__/**"]
+}
