@@ -1,0 +1,16 @@
+
+MAKE SURE DOCKER IS OPEN AND THEN RUN THESE COMMANDS
+
+
+docker start cockroach
+
+mix deps.get
+
+docker run -d \
+  --name cockroachdb \
+  -p 26257:26257 \
+  cockroachdb/cockroach start-single-node \
+  --insecure \
+  --advertise-addr=localhost
+
+mix phx.server

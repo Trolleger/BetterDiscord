@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   cockroachdb:
-    image: cockroachdb/cockroach:v23.1.11
+    image: cockroachdb/cockroach
     command: start-single-node --insecure
     ports:
       - "26257:26257"
@@ -17,7 +17,7 @@ services:
     ports:
       - "4000:4000"
     environment:
-      DATABASE_URL: postgres://root@cockroachdb:26257/chat_app_dev?sslmode=disable
+      DATABASE_URL: "postgresql://root@cockroachdb:26257/chat_app_dev?sslmode=disable"
 
 volumes:
   cockroach-data:

@@ -4,7 +4,7 @@ import Config
 config :chat_app, ChatApp.Repo,
   username: "root",
   password: "",
-  hostname: "cockroachdb",
+  hostname: "localhost",  # Changed from "cockroachdb" to "localhost"
   port: 26257,
   database: "chat_app_dev",
   ssl: false,
@@ -18,11 +18,7 @@ config :chat_app, ChatAppWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "912UM4qH56DR+puJxrnU+zcbIHIhq0UxR81puy9McK/tuxFhgniIbTmbeYlCwbzR",
-  watchers: [
-    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
-  ]
+  secret_key_base: "912UM4qH56DR+puJxrnU+zcbIHIhq0UxR81puy9McK/tuxFhgniIbTmbeYlCwbzR"  # Removed the extra comma here
 
 # Disable dev_routes like dashboard & mailbox
 config :chat_app, dev_routes: false
