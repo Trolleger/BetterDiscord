@@ -87,3 +87,5 @@ volumes:
 networks:
   backend:
     driver: bridge
+# This file defines a Docker Compose configuration for a chat application.
+# It includes services for CockroachDB, Coturn, Janus, MinIO, and the main application.
