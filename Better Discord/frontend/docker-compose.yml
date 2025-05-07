@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ../backend/chat_app       # Go up one level and then into backend/chat
+      dockerfile: Dockerfile
+    container_name: betterdiscord-backend
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - betterdiscord
+
+  frontend:
+    build:
+      context: .                    # Current directory is already frontend
+      dockerfile: Dockerfile
+    container_name: betterdiscord-frontend
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    networks:
+      - betterdiscord
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=http://backend:3000
+
+networks:
+  betterdiscord:
+    driver: bridge
