@@ -15,15 +15,31 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
-      "expo": ["./node_modules/expo"],
-      "expo-modules-core": ["./node_modules/expo-modules-core"]
+      "expo": [
+        "./node_modules/expo"
+      ],
+      "expo-modules-core": [
+        "./node_modules/expo-modules-core"
+      ]
     },
-    // Add these new options:
-    "lib": ["dom", "esnext"],
-    "types": ["jest", "node"],
-    "noEmit": true, // Prevents emitting JS files (handled by Webpack/Babel)
-    "incremental": true // Faster TypeScript compilation
+    "lib": [
+      "dom",
+      "esnext"
+    ],
+    "types": [
+      "jest",
+      "node"
+    ],
+    "noEmit": true,
+    "incremental": true
   },
-  "include": ["src/**/*", "types/**/*"],
-  "exclude": ["node_modules", "**/__tests__/**"]
+  "include": [
+    "src/**/*",
+    "types/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/__tests__/**"
+  ],
+  "extends": "expo/tsconfig.base"
 }

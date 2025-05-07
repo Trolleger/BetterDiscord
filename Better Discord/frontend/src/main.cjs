@@ -1,24 +1,31 @@
 "use strict";
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
+const { app, BrowserWindow } = require("electron");
+const path = require("path");
+
 function createWindow() {
     const win = new BrowserWindow({
         width: 800,
         height: 600,
         webPreferences: {
-            nodeIntegration: false, // Disable for security
-            contextIsolation: true, // Enable isolation for safety
-            preload: path.join(__dirname, 'preload.js'), // Optional, if you're using a preload script
+            nodeIntegration: false, // Better for security
+            contextIsolation: true, // Isolate context
+            preload: path.join(__dirname, "preload.js"), // Optional
         },
     });
-    win.loadURL('http://localhost:3000'); // Ensure your frontend server is running here
+
+    // Load built frontend from dist/index.html
+    win.loadFile(path.join(__dirname, "frontend", "dist", "index.html"));
 }
+
 app.whenReady().then(createWindow);
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin')
+
+app.on("window-all-closed", () => {
+    if (process.platform !== "darwin") {
         app.quit();
+    }
 });
-app.on('activate', () => {
+
+app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         createWindow();
     }
