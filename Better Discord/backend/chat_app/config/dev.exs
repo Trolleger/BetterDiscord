@@ -1,35 +1,50 @@
 import Config
 
-# Configure your database (CockroachDB)
+# Auto-generate development secret key (safe for local use)
+secret_key_base = System.get_env("SECRET_KEY_BASE") || 
+  "dev_" <> (:crypto.strong_rand_bytes(64) |> Base.url_encode64() |> binary_part(0, 64))
+
+# Database Configuration (CockroachDB optimized)
 config :chat_app, ChatApp.Repo,
   username: "root",
   password: "",
-  hostname: "localhost",  # Changed from "cockroachdb" to "localhost"
+  hostname: "cockroachdb",
   port: 26257,
   database: "chat_app_dev",
+  pool_size: 10,
   ssl: false,
-  stacktrace: true,
+  # CockroachDB-specific settings
+  migration_lock: nil,                    # Disables unsupported LOCK TABLE
+  migration_primary_key: [type: :uuid],   # Best for distributed DBs
+  migration_foreign_key: [type: :uuid],   # Consistent references
+  migration_timestamps: [
+    type: :timestamptz,
+    inserted_at: :created_at              # CockroachDB convention
+  ],
+  protocol: :postgres,
+  parameters: [application_name: "chat_app_dev"],
+  # Debug settings
   show_sensitive_data_on_connection_error: true,
-  pool_size: 10
+  stacktrace: true
 
-# Endpoint configuration
+# Endpoint Configuration
 config :chat_app, ChatAppWeb.Endpoint,
   http: [ip: {0, 0, 0, 0}, port: 4000],
-  check_origin: false,
-  code_reloader: true,
+  secret_key_base: secret_key_base,
   debug_errors: true,
-  secret_key_base: "912UM4qH56DR+puJxrnU+zcbIHIhq0UxR81puy9McK/tuxFhgniIbTmbeYlCwbzR"  # Removed the extra comma here
+  code_reloader: true,
+  check_origin: false,
+  watchers: []
 
-# Disable dev_routes like dashboard & mailbox
-config :chat_app, dev_routes: false
-
-# Logger formatting
+# Logger
 config :logger, :console,
-  format: "[$level] $message\n"
+  format: "[$level] $message\n",
+  level: :debug
 
-# Development settings
+# Phoenix
 config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime
 
-# Disable swoosh api client in development
+# Environment flags
+config :chat_app, dev_routes: false
 config :swoosh, :api_client, false
