@@ -1,36 +1,40 @@
-version: "3.9"
+
 
 services:
   cockroachdb:
     image: cockroachdb/cockroach:v23.1.11
     command:
       - start-single-node
-      - --insecure
-      - --listen-addr=localhost:26257
+      - --accept-sql-without-tls
+      - --insecure  # Added to disable TLS for simplicity
       - --http-addr=0.0.0.0:8080
-      - --advertise-addr=localhost
+      - --listen-addr=127.0.0.1:26257
+      - --advertise-addr=cockroachdb:26257
     hostname: cockroachdb
     ports:
       - "26257:26257"
-      - "8081:8080"
+      - "8080:8080"
     volumes:
       - cockroach-data:/cockroach/cockroach-data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       betterdiscord:
         aliases:
           - db
     healthcheck:
-      test: [ "CMD-SHELL", "sleep 20 && curl -f http://localhost:8080/health || exit 1" ]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
       interval: 30s
-      timeout: 30s
-      retries: 10
-      start_period: 60s
+      timeout: 60s
+      retries: 60
+      start_period: 120s
+    restart: unless-stopped
+
 
   coturn:
     image: instrumentisto/coturn:4.5.2
     ports:
-      - "3479:3478/tcp"
-      - "3479:3478/udp"
+      - "3478:3478/tcp"
+      - "3478:3478/udp"
     volumes:
       - ./backend/chat_app/secrets:/run/secrets:ro
       - ./backend/chat_app/turnserver.conf:/etc/coturn/turnserver.conf:ro
@@ -47,8 +51,8 @@ services:
       - janus-config:/usr/local/etc/janus
     environment:
       - JANUS_LOG_LEVEL=4
-      - JANUS_NAT_STUN_SERVER=coturn
-      - JANUS_NAT_STUN_PORT=3478
+      - JANUS_NAT_STUN_SERVER=stun.l.google.com
+      - JANUS_NAT_STUN_PORT=19302
     depends_on:
       - coturn
     networks:
@@ -82,44 +86,37 @@ services:
     depends_on:
       cockroachdb:
         condition: service_healthy
+      janus:
+        condition: service_started
     networks:
       - betterdiscord
-    restart: unless-stopped
-    command: [ "sh", "-c", "sleep 45 && ./your-app-start-command" ]
+    restart: on-failure
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:3000/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    command: [ "sh", "-c", "sleep 30 && mix phx.server" ]
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    environment:
-      - REACT_APP_API_URL=http://localhost:3000/api  # Updated for dev
-      - CHOKIDAR_USEPOLLING=true  # Enable hot-reload
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     ports:
-      - "8080:3000"  # Changed from 3001 to 8080
-    working_dir: /app
-    command: yarn start  # Explicit Yarn command
+      - "80:80"
     networks:
       - betterdiscord
     restart: unless-stopped
-
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    ports: []  # Disabled for now
     volumes:
-      - ./frontend/frontend/dist:/usr/share/nginx/html
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    networks:
-      - betterdiscord
-    restart: unless-stopped
+    depends_on:
+      - backend
 
 volumes:
   cockroach-data:
   janus-config:
   minio-data:
+
 
 networks:
   betterdiscord:

@@ -1,24 +1,30 @@
 # Stage 1: Build frontend
-FROM node:20-alpine as build
+FROM node:20-alpine as builder
 
 WORKDIR /app
 
-# Install dependencies
-COPY package.json yarn.lock ./
-RUN yarn install
+# Install Yarn
+RUN apk add --no-cache yarn
 
-# Build the app
-COPY . . 
+# Copy package.json first (caching optimization)
+COPY package.json yarn.lock ./
+
+# Install dependencies
+RUN yarn install --frozen-lockfile
+
+# Copy the rest of the files (including public/)
+COPY . .
+
+# Build the app (outputs to /app/build or /app/dist)
 RUN yarn build
 
-# Stage 2: Serve frontend with Nginx
+# Stage 2: Serve with Nginx
 FROM nginx:latest
 
-# Copy built frontend from the build stage
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copy build output to Nginx
+COPY --from=builder /app/build /usr/share/nginx/html  
+# OR (if using Vite)
+# COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy custom nginx.conf
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Expose Nginx port
+# nginx.conf is bind-mounted (no COPY needed)
 EXPOSE 80
