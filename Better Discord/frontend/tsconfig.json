@@ -2,44 +2,19 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "node",
-    "jsx": "react-jsx",
     "strict": true,
+    "jsx": "react-jsx",
+    "outDir": "./dist",
+    "noEmit": false,  // MUST CHANGE THIS
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "allowJs": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "./dist",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
-      "expo": [
-        "./node_modules/expo"
-      ],
-      "expo-modules-core": [
-        "./node_modules/expo-modules-core"
-      ]
-    },
-    "lib": [
-      "dom",
-      "esnext"
-    ],
-    "types": [
-      "jest",
-      "node"
-    ],
-    "noEmit": true,
-    "incremental": true
+      "expo": ["node_modules/expo"]
+    }
   },
-  "include": [
-    "src/**/*",
-    "types/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/__tests__/**"
-  ],
-  "extends": "expo/tsconfig.base"
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
 }
