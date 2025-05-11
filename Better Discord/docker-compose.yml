@@ -1,0 +1,126 @@
+version: "3.9"
+
+services:
+  cockroachdb:
+    image: cockroachdb/cockroach:v23.1.11
+    command:
+      - start-single-node
+      - --insecure
+      - --listen-addr=localhost:26257
+      - --http-addr=0.0.0.0:8080
+      - --advertise-addr=localhost
+    hostname: cockroachdb
+    ports:
+      - "26257:26257"
+      - "8081:8080"
+    volumes:
+      - cockroach-data:/cockroach/cockroach-data
+    networks:
+      betterdiscord:
+        aliases:
+          - db
+    healthcheck:
+      test: [ "CMD-SHELL", "sleep 20 && curl -f http://localhost:8080/health || exit 1" ]
+      interval: 30s
+      timeout: 30s
+      retries: 10
+      start_period: 60s
+
+  coturn:
+    image: instrumentisto/coturn:4.5.2
+    ports:
+      - "3479:3478/tcp"
+      - "3479:3478/udp"
+    volumes:
+      - ./backend/chat_app/secrets:/run/secrets:ro
+      - ./backend/chat_app/turnserver.conf:/etc/coturn/turnserver.conf:ro
+    networks:
+      - betterdiscord
+    restart: unless-stopped
+
+  janus:
+    image: canyan/janus-gateway:latest
+    ports:
+      - "8088:8088"
+      - "8188:8188"
+    volumes:
+      - janus-config:/usr/local/etc/janus
+    environment:
+      - JANUS_LOG_LEVEL=4
+      - JANUS_NAT_STUN_SERVER=coturn
+      - JANUS_NAT_STUN_PORT=3478
+    depends_on:
+      - coturn
+    networks:
+      - betterdiscord
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:RELEASE.2023-10-25T06-33-25Z
+    command: server /data --console-address ":9001"
+    ports:
+      - "9002:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio-data:/data
+    networks:
+      - betterdiscord
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend/chat_app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://root@cockroachdb:26257/chat_app_dev?sslmode=disable
+      - JANUS_URL=ws://janus:8188
+    depends_on:
+      cockroachdb:
+        condition: service_healthy
+    networks:
+      - betterdiscord
+    restart: unless-stopped
+    command: [ "sh", "-c", "sleep 45 && ./your-app-start-command" ]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      - REACT_APP_API_URL=http://localhost:3000/api  # Updated for dev
+      - CHOKIDAR_USEPOLLING=true  # Enable hot-reload
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "8080:3000"  # Changed from 3001 to 8080
+    working_dir: /app
+    command: yarn start  # Explicit Yarn command
+    networks:
+      - betterdiscord
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports: []  # Disabled for now
+    volumes:
+      - ./frontend/frontend/dist:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - betterdiscord
+    restart: unless-stopped
+
+volumes:
+  cockroach-data:
+  janus-config:
+  minio-data:
+
+networks:
+  betterdiscord:
+    driver: bridge
