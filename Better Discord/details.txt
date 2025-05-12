@@ -1,0 +1,5 @@
+# Full clean restart
+docker-compose down -v && docker-compose up -d
+
+# Verify all services
+docker-compose ps

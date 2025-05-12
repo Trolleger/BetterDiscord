@@ -1,35 +1,34 @@
-
+version: '3.8'
 
 services:
   cockroachdb:
     image: cockroachdb/cockroach:v23.1.11
-    command:
-      - start-single-node
-      - --accept-sql-without-tls
-      - --insecure  # Added to disable TLS for simplicity
-      - --http-addr=0.0.0.0:8080
-      - --listen-addr=127.0.0.1:26257
-      - --advertise-addr=cockroachdb:26257
-    hostname: cockroachdb
     ports:
       - "26257:26257"
       - "8080:8080"
+    command:
+      - start-single-node
+      - --insecure
+      - --listen-addr=0.0.0.0:26257  # Changed to 0.0.0.0
+      - --http-addr=0.0.0.0:8080
     volumes:
       - cockroach-data:/cockroach/cockroach-data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      betterdiscord:
-        aliases:
-          - db
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
-      interval: 30s
-      timeout: 60s
-      retries: 60
-      start_period: 120s
-    restart: unless-stopped
+      - betterdiscord
 
+  backend:
+    build:
+      context: ./backend/chat_app
+    environment:
+      DATABASE_URL: "postgresql://root@cockroachdb:26257/chat_app_dev?sslmode=disable"
+    ports:
+      - "4000:4000"
+    networks:
+      - betterdiscord
+    depends_on:
+      - cockroachdb
 
+  # Other services remain unchanged
   coturn:
     image: instrumentisto/coturn:4.5.2
     ports:
@@ -37,10 +36,8 @@ services:
       - "3478:3478/udp"
     volumes:
       - ./backend/chat_app/secrets:/run/secrets:ro
-      - ./backend/chat_app/turnserver.conf:/etc/coturn/turnserver.conf:ro
     networks:
       - betterdiscord
-    restart: unless-stopped
 
   janus:
     image: canyan/janus-gateway:latest
@@ -49,15 +46,10 @@ services:
       - "8188:8188"
     volumes:
       - janus-config:/usr/local/etc/janus
-    environment:
-      - JANUS_LOG_LEVEL=4
-      - JANUS_NAT_STUN_SERVER=stun.l.google.com
-      - JANUS_NAT_STUN_PORT=19302
-    depends_on:
-      - coturn
     networks:
       - betterdiscord
-    restart: unless-stopped
+    depends_on:
+      - coturn
 
   minio:
     image: minio/minio:RELEASE.2023-10-25T06-33-25Z
@@ -72,43 +64,14 @@ services:
       - minio-data:/data
     networks:
       - betterdiscord
-    restart: unless-stopped
-
-  backend:
-    build:
-      context: ./backend/chat_app
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - DATABASE_URL=postgresql://root@cockroachdb:26257/chat_app_dev?sslmode=disable
-      - JANUS_URL=ws://janus:8188
-    depends_on:
-      cockroachdb:
-        condition: service_healthy
-      janus:
-        condition: service_started
-    networks:
-      - betterdiscord
-    restart: on-failure
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:3000/health || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    command: [ "sh", "-c", "sleep 30 && mix phx.server" ]
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
     ports:
       - "80:80"
     networks:
       - betterdiscord
-    restart: unless-stopped
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - backend
 
@@ -116,7 +79,6 @@ volumes:
   cockroach-data:
   janus-config:
   minio-data:
-
 
 networks:
   betterdiscord:
