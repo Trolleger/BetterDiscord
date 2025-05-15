@@ -8,42 +8,38 @@ services:
     ports:
       - "26257:26257"
       - "8080:8080"
-    command: 
-      - start-single-node
-      - --insecure
-      - --listen-addr=0.0.0.0
-      - --http-addr=0.0.0.0
-      - --advertise-addr=cockroachdb
+    command: start-single-node --insecure
+
+
+
     environment:
       COCKROACH_ALLOW_INTERNET_ACCESS: "true"
       COCKROACH_UI_RELEASE_NOTES_OPT_OUT: "true"
     volumes:
       - cockroach-data:/cockroach/cockroach-data
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health?ready=1 || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/health?ready=1 || exit 1" ]
       interval: 10s
       timeout: 30s
       retries: 30
     networks:
       betterdiscord:
         aliases:
-          - db
+          - cockroachdb
 
   backend:
     build:
       context: ./backend/chat_app
     environment:
       DATABASE_URL: "postgresql://root@cockroachdb:26257/chat_app_dev?sslmode=disable"
-      ECTO_IPV6: "true"
-      ERL_AFLAGS: "-proto_dist inet6_tcp"
     ports:
       - "4000:4000"
     networks:
       - betterdiscord
     depends_on:
-      cockroachdb:
-        condition: service_healthy
+      - cockroachdb
 
+  # Other services remain unchanged
   coturn:
     image: instrumentisto/coturn:4.5.2
     ports:
@@ -73,8 +69,8 @@ services:
       - "9002:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
     volumes:
       - minio-data:/data
     networks:
@@ -92,18 +88,10 @@ services:
 
 volumes:
   cockroach-data:
-    driver: local
   janus-config:
-    driver: local
   minio-data:
-    driver: local
+
 
 networks:
   betterdiscord:
     driver: bridge
-    attachable: true
-    ipam:
-      config:
-        - subnet: 172.28.0.0/16  # Changed to rarely-used range
-          gateway: 172.28.0.1
-        - subnet: fd00:dba::/64   # Unique IPv6 range
