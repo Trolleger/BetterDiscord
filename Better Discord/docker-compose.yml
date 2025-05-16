@@ -7,8 +7,8 @@ services:
     command: 
       - start-single-node
       - --insecure
-      - --listen-addr=localhost:26257  # MUST REMAIN LOCALHOST
-      - --advertise-addr=cockroachdb:26257  # Critical fix for inter-container communication
+      - --listen-addr=localhost:26257
+      - --http-addr=0.0.0.0:8080  # ← THIS IS THE CRITICAL LINE
       - --sql-addr=cockroachdb:26257
       - --accept-sql-without-tls
     environment:
