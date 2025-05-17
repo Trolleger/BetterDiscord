@@ -8,3 +8,11 @@ docker-compose down -v && docker-compose up -d
 
 # Verify all services
 docker-compose ps
+
+
+
+SAI CAN U SEE THIS:
+
+
+
+git log
