@@ -1,10 +1,14 @@
 {
   "name": "betterdiscord",
   "version": "1.0.0",
+  "private": true,
   "scripts": {
     "start": "vite",
+    "dev": "vite",
     "build": "vite build",
-    "electron": "yarn build && electron ./dist/index.cjs",
+    "build-main": "tsc --project tsconfig.json",
+    "electron": "yarn build && yarn build-main && electron ./dist/main.js",
+    "electron:dev": "ts-node ./main.ts",
     "web": "vite",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
@@ -19,7 +23,7 @@
     "electron": "36.1.0",
     "expo": "^53.0.9",
     "expo-status-bar": "^2.2.3",
-    "react": "^18.0.0",
+    "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-native": "^0.79.2",
     "react-native-web": "^0.20.0",
@@ -33,15 +37,17 @@
     "@babel/preset-react": "^7.27.1",
     "@babel/preset-typescript": "^7.27.1",
     "@craco/craco": "^7.1.0",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
     "cross-env": "^7.0.3",
     "expo-cli": "^6.3.11",
     "patch-package": "^6.5.1",
     "react-scripts": "^5.0.1",
     "ts-loader": "^9.5.1",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.12"
+    "typescript": "^5.8.3",
+    "ts-node": "^10.9.1",
+    "vite": "^6.3.5"
   },
-  "private": true,
   "homepage": ".",
   "browserslist": {
     "production": [

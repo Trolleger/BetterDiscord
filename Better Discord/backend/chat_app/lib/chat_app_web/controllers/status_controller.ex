@@ -3,6 +3,6 @@ defmodule ChatAppWeb.StatusController do
 
   # GET /api/status
   def status(conn, _params) do
-    json(conn, %{message: "API is working!"})
+    json(conn, %{})
   end
 end

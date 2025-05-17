@@ -4,18 +4,21 @@ import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  root: './',  // The root is your project directory
-  publicDir: 'public',  // Static files like index.html are in the "public" folder
+  root: './',                // root is frontend folder (where index.html lives)
+  publicDir: 'public',       // static assets
+  server: {
+    port: 3000,
+  },
   build: {
-    outDir: 'build',  // The final build output will go to the "build" folder
-    emptyOutDir: true,  // Clear the build folder before generating new files
+    outDir: 'build',         // output folder for build
+    emptyOutDir: true,
     rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'public/index.html'),  // Ensure Vite uses the index.html in the "public" folder
-      },
+      input: resolve(__dirname, 'index.html'),  // point directly to root index.html
     },
-    commonjsOptions: {
-      transformMixedEsModules: true,
+  },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),           // optional alias for src
     },
   },
 });
