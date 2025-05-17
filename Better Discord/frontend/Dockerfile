@@ -1,30 +1,26 @@
-# Stage 1: Build frontend
 FROM node:20-alpine as builder
 
 WORKDIR /app
 
-# Install Yarn
 RUN apk add --no-cache yarn
 
-# Copy package.json first (caching optimization)
+# Copy package.json and yarn.lock first (to leverage cache)
 COPY package.json yarn.lock ./
 
-# Install dependencies
-RUN yarn install 
-
-# Copy the rest of the files (including public/)
+# Copy the rest of the source files
 COPY . .
 
-# Build the app (outputs to /app/build or /app/dist)
+# Install dependencies
+RUN yarn install
+
+# Force right esbuild version
+RUN yarn add -D esbuild@0.25.4
+
+# Build the app
 RUN yarn build
 
-# Stage 2: Serve with Nginx
 FROM nginx:latest
 
-# Copy build output to Nginx
-COPY --from=builder /app/build /usr/share/nginx/html  
-# OR (if using Vite)
-# COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# nginx.conf is bind-mounted (no COPY needed)
 EXPOSE 80

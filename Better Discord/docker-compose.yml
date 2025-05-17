@@ -7,6 +7,8 @@ services:
       - start-single-node
       - --insecure
       - --listen-addr=localhost:26257
+
+
       - --http-addr=0.0.0.0:8080  # ← THIS IS THE CRITICAL LINE
       - --sql-addr=cockroachdb:26257
       - --accept-sql-without-tls

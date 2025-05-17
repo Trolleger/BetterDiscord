@@ -1,3 +1,8 @@
+docker-compose exec backend mix ecto.create
+docker-compose exec backend mix ecto.migrate
+
+IF THERE ARE ANY PHOENIX ERRORS RUN THE ABOVE
+
 # Full clean restart
 docker-compose down -v && docker-compose up -d
 
