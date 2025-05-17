@@ -19,8 +19,16 @@ RUN yarn add -D esbuild@0.25.4
 # Build the app
 RUN yarn build
 
+# Debug step: check contents of build folder
+RUN ls -l /app/build
+
 FROM nginx:latest
 
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Clear default nginx html folder before copy (optional)
+RUN rm -rf /usr/share/nginx/html/*
+
+# COPY the correct build folder (change from /app/dist to /app/build)
+COPY --from=builder /app/build /usr/share/nginx/html
+
 
 EXPOSE 80
