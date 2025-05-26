@@ -13,7 +13,6 @@ defmodule ChatApp.MixProject do
     ]
   end
 
-  # Configuration for the OTP application.
   def application do
     [
       mod: {ChatApp.Application, []},
@@ -21,11 +20,9 @@ defmodule ChatApp.MixProject do
     ]
   end
 
-  # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
-  # Specifies your project dependencies
   defp deps do
     [
       {:phoenix, "~> 1.7.21"},
@@ -39,11 +36,13 @@ defmodule ChatApp.MixProject do
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:ueberauth, "~> 0.10"},
+      {:ueberauth_google, "~> 0.10"},
+      {:cors_plug, "~> 3.0"}
     ]
   end
 
-  # Aliases are shortcuts or tasks specific to the current project.
   defp aliases do
     [
       setup: ["deps.get", "ecto.setup"],

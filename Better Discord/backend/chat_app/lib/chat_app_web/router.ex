@@ -1,4 +1,3 @@
-# lib/chat_app_web/router.ex
 defmodule ChatAppWeb.Router do
   use ChatAppWeb, :router
 
@@ -7,18 +6,31 @@ defmodule ChatAppWeb.Router do
     plug :accepts, ["json"]
   end
 
-  # -- Serve GET "/" as JSON via your StatusController --
+  # -- OAuth pipeline --
+  pipeline :auth do
+    plug Ueberauth
+  end
+
+  # -- Root JSON endpoint --
   scope "/", ChatAppWeb do
     pipe_through :api
 
     get "/", StatusController, :status
   end
 
-  # -- API routes under /api --
+  # -- Main API JSON endpoints --
   scope "/api", ChatAppWeb do
     pipe_through :api
 
     get "/status", StatusController, :status
-    # …other JSON endpoints…
+    # Add other JSON endpoints here
+  end
+
+  # -- OAuth endpoints --
+  scope "/auth", ChatAppWeb do
+    pipe_through [:api, :auth]
+
+    get "/google", AuthController, :request
+    get "/google/callback", AuthController, :callback
   end
 end

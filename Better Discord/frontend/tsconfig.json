@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES6",
+    "target": "ESNext",
     "module": "CommonJS",
     "moduleResolution": "Node",
     "jsx": "react-jsx",
@@ -12,15 +12,9 @@
     "paths": {
       "@/*": ["src/*"]
     },
+    "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src",
-    "main.ts",             // add this so main.ts is compiled
-    "vite.config.ts",
-    "react-app-env.d.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src", "main.ts"],
+  "exclude": ["node_modules", "dist", "**/*.js"]
 }

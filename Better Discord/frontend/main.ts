@@ -1,24 +1,27 @@
 import { app, BrowserWindow } from 'electron';
-import * as path from 'path';
+import path from 'path';
 
-let mainWindow: BrowserWindow | null;
+let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      nodeIntegration: false,    // keep it secure
-      contextIsolation: true,    // recommended for security
-      preload: path.join(__dirname, 'preload.js'), // if you have one; else omit
+      nodeIntegration: false,
+      contextIsolation: true,
+      // preload: path.join(__dirname, 'preload.js'), // uncomment if you have preload.js
     },
   });
 
-  // Load React app in dev or production mode:
-  if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:3000');  // Vite dev server URL
+  const isDev = process.env.NODE_ENV === 'development';
+
+  if (isDev) {
+    mainWindow.loadURL('http://localhost:3000');
+    mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../build/index.html')); // built static files
+    mainWindow.loadFile(path.join(__dirname, '../build/index.html'));
+
   }
 
   mainWindow.on('closed', () => {
@@ -26,12 +29,12 @@ function createWindow() {
   });
 }
 
-app.on('ready', createWindow);
+app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
 app.on('activate', () => {
-  if (mainWindow === null) createWindow();
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });

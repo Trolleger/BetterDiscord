@@ -33,5 +33,17 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+# === Ueberauth Google OAuth config (hardcoded for dev) ===
+config :ueberauth, Ueberauth,
+  providers: [
+    google: {Ueberauth.Strategy.Google, [default_scope: "email profile"]}
+  ]
+
+config :ueberauth, Ueberauth.Strategy.Google.OAuth,
+  client_id: "58516048770-lqsao96iscal7fb850pgmre3cmhpvm6q.apps.googleusercontent.com",
+  client_secret: "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",
+  redirect_uri: "http://localhost:4000/auth/google/callback"
+# === End Ueberauth config ===
+
 # Import environment specific config
 import_config "#{config_env()}.exs"

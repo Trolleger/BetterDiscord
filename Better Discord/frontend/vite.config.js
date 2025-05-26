@@ -1,24 +1,19 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  root: './',                // root is frontend folder (where index.html lives)
-  publicDir: 'public',       // static assets
   server: {
     port: 3000,
+    open: true,
   },
   build: {
-    outDir: 'build',         // output folder for build
+    outDir: 'build',    // Build files here
     emptyOutDir: true,
-    rollupOptions: {
-      input: resolve(__dirname, 'index.html'),  // point directly to root index.html
-    },
   },
+  base: './',            // crucial for Electron relative paths
+  publicDir: false,      // disables the /public folder copying
   resolve: {
-    alias: {
-      '@': resolve(__dirname, 'src'),           // optional alias for src
-    },
+    extensions: ['.js', '.jsx', '.ts', '.tsx'],
   },
 });
