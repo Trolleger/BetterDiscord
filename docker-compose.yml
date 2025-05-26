@@ -1,0 +1,116 @@
+
+services:
+  cockroachdb:
+    container_name: cockroachdb
+    image: cockroachdb/cockroach:v22.2.8
+    command: 
+      - start-single-node
+      - --insecure
+      - --listen-addr=localhost:26257
+
+
+      - --http-addr=0.0.0.0:8080  # ← THIS IS THE CRITICAL LINE
+      - --sql-addr=cockroachdb:26257
+      - --accept-sql-without-tls
+    environment:
+      COCKROACH_ALLOW_INTERNET_ACCESS: "true"
+    ports:
+      - "26258:26257"
+      - "8080:8080"
+    volumes:
+      - cockroach-data:/cockroach/cockroach-data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health?ready=1 || exit 1"]
+      interval: 15s
+      timeout: 45s
+      retries: 20
+      start_period: 30s
+    networks:
+      betterdiscord:
+        aliases:
+          - cockroachdb
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend/chat_app
+    environment:
+      DATABASE_URL: "postgresql://root@cockroachdb:26257/chat_app_dev?sslmode=disable"
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend/chat_app/secrets:/run/secrets:ro
+    networks:
+      - betterdiscord
+    depends_on:
+      cockroachdb:
+        condition: service_healthy
+    restart: unless-stopped
+
+  coturn:
+    image: instrumentisto/coturn:4.5.2
+    ports:
+      - "3478:3478/tcp"
+      - "3478:3478/udp"
+    volumes:
+      - ./backend/chat_app/secrets/turnserver.conf:/etc/coturn/turnserver.conf:ro
+    command: >
+      turnserver -c /etc/coturn/turnserver.conf
+      --log-file=stdout
+      --no-tls
+      --no-dtls
+      --cli-password=123456
+    networks:
+      - betterdiscord
+    restart: unless-stopped
+
+  janus:
+    image: canyan/janus-gateway:latest
+    ports:
+      - "8088:8088"
+      - "8188:8188"
+    volumes:
+      - janus-config:/usr/local/etc/janus
+    environment:
+      - JANUS_ICE_STUN_SERVER=stun.l.google.com:19302
+      - JANUS_NAT_1_1_MAP=coturn  # Add NAT mapping
+    networks:
+      - betterdiscord
+    depends_on:
+      - coturn
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: server /data --console-address ":9001"
+    ports:
+      - "9002:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=password123
+    volumes:
+      - minio-data:/data
+    networks:
+      - betterdiscord
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "80:80"
+    networks:
+      - betterdiscord
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  cockroach-data:
+  janus-config:
+  minio-data:
+
+networks:
+  betterdiscord:
+    driver: bridge

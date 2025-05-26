@@ -1,0 +1,19 @@
+# Start everything (Docker must be running)
+docker-compose up -d
+
+# Create database (one-time setup)
+docker exec -it chat_app-cockroachdb-1 \
+  ./cockroach sql --insecure -e "CREATE DATABASE chat_app_dev;"
+
+# Get Phoenix dependencies and start server
+docker exec -it chat_app-app-1 sh -c "mix deps.get && mix phx.server"
+
+# Test connection (should return {:ok, %Postgrex.Result{...}})
+docker exec -it chat_app-app-1 mix run -e "ChatApp.Repo.query(\"SELECT 1\") |> IO.inspect"
+
+
+random stuff
+Rebuild containers	docker-compose up -d --build
+Enter app shell	docker exec -it chat_app-app-1 /bin/sh
+View DB tables	docker exec -it chat_app-cockroachdb-1 ./cockroach sql --insecure -e "SHOW TABLES FROM chat_app_dev;"
+Full reset	docker-compose down -v && docker-compose up -d
