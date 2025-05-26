@@ -1,36 +1,33 @@
 defmodule ChatAppWeb.Router do
   use ChatAppWeb, :router
 
-  # -- API pipeline, for JSON endpoints --
   pipeline :api do
     plug :accepts, ["json"]
   end
 
-  # -- OAuth pipeline --
   pipeline :auth do
     plug Ueberauth
   end
 
-  # -- Root JSON endpoint --
+  # Health check/status endpoint
   scope "/", ChatAppWeb do
     pipe_through :api
-
     get "/", StatusController, :status
   end
 
-  # -- Main API JSON endpoints --
+  # API Routes
   scope "/api", ChatAppWeb do
     pipe_through :api
-
     get "/status", StatusController, :status
-    # Add other JSON endpoints here
+    # Add other API endpoints here
   end
 
-  # -- OAuth endpoints --
-  scope "/auth", ChatAppWeb do
+  # OAuth Routes
+  scope "/api/auth", ChatAppWeb do
     pipe_through [:api, :auth]
-
-    get "/google", AuthController, :request
-    get "/google/callback", AuthController, :callback
+    get "/:provider", AuthController, :request
+    get "/:provider/callback", AuthController, :callback
   end
+
+  # No favicon route needed!
 end

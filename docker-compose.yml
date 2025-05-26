@@ -1,4 +1,3 @@
-
 services:
   cockroachdb:
     container_name: cockroachdb
@@ -7,8 +6,6 @@ services:
       - start-single-node
       - --insecure
       - --listen-addr=localhost:26257
-
-
       - --http-addr=0.0.0.0:8080  # ← THIS IS THE CRITICAL LINE
       - --sql-addr=cockroachdb:26257
       - --accept-sql-without-tls
@@ -16,7 +13,7 @@ services:
       COCKROACH_ALLOW_INTERNET_ACCESS: "true"
     ports:
       - "26258:26257"
-      - "8080:8080"
+      - "8080:8080" 
     volumes:
       - cockroach-data:/cockroach/cockroach-data
     healthcheck:
@@ -36,6 +33,8 @@ services:
       context: ./backend/chat_app
     environment:
       DATABASE_URL: "postgresql://root@cockroachdb:26257/chat_app_dev?sslmode=disable"
+      GOOGLE_CLIENT_ID: "58516048770-lqsao96iscal7fb850pgmre3cmhpvm6q.apps.googleusercontent.com"
+      GOOGLE_CLIENT_SECRET: "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"
     ports:
       - "4000:4000"
     volumes:
