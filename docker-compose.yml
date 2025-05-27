@@ -49,11 +49,12 @@ services:
     restart: unless-stopped
 
   coturn:
+    container_name: betterdiscord-coturn
     image: instrumentisto/coturn:4.5.2
     ports:
       - "3478:3478/tcp"
       - "3478:3478/udp"
-      - "50000-51000:50000-51000/udp"  # Reduced UDP range for Windows compatibility
+      - "50000-51000:50000-51000/udp"
     volumes:
       - ./backend/chat_app/secrets/turnserver.conf:/etc/coturn/turnserver.conf:ro
     command: >
@@ -63,7 +64,9 @@ services:
       --no-dtls
       --cli-password=123456
     networks:
-      - betterdiscord
+      betterdiscord:
+        aliases:
+          - coturn
     restart: unless-stopped
 
   rabbitmq:
@@ -80,13 +83,14 @@ services:
     restart: unless-stopped
 
   janus:
+    container_name: betterdiscord-janus
     image: canyan/janus-gateway:latest
     ports:
       - "8088:8088/tcp"
       - "8188:8188/tcp"
       - "10000-10200:10000-10200/udp"
     volumes:
-      - ./backend/chat_app/secrets/janus.jcfg:/usr/local/etc/janus/janus.jcfg:ro
+      - ./backend/chat_app/secrets:/usr/local/etc/janus:ro
     networks:
       - betterdiscord
     depends_on:
