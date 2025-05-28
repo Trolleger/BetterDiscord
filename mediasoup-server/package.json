@@ -1,0 +1,9 @@
+{
+  "name": "mediasoup-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "mediasoup": "^3.16.0"
+  }
+}
