@@ -1,10 +1,10 @@
-version: "3.8"
+version: "3.9"
 
 services:
   cockroachdb:
     container_name: cockroachdb
     image: cockroachdb/cockroach:v22.2.8
-    command: 
+    command:
       - start-single-node
       - --insecure
       - --listen-addr=localhost:26257
@@ -82,21 +82,6 @@ services:
       - betterdiscord
     restart: unless-stopped
 
-  janus:
-    container_name: betterdiscord-janus
-    image: canyan/janus-gateway:latest
-    ports:
-      - "8088:8088/tcp"
-      - "8188:8188/tcp"
-      - "10000-10200:10000-10200/udp"
-    volumes:
-      - ./backend/chat_app/secrets:/usr/local/etc/janus:ro
-    networks:
-      - betterdiscord
-    depends_on:
-      - coturn
-    restart: unless-stopped
-
   minio:
     image: minio/minio:RELEASE.2025-04-22T22-12-26Z
     command: server /data --console-address ":9001"
@@ -125,7 +110,6 @@ services:
 
 volumes:
   cockroach-data:
-  janus-config:
   minio-data:
 
 networks:
