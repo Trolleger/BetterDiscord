@@ -39,8 +39,6 @@ services:
       GOOGLE_CLIENT_SECRET: "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"
     ports:
       - "4000:4000"
-    volumes:
-      - ./backend/chat_app/secrets:/run/secrets:ro
     networks:
       - betterdiscord
     depends_on:
@@ -79,6 +77,7 @@ services:
     networks:
       - betterdiscord
     restart: unless-stopped
+
   minio:
     image: minio/minio:RELEASE.2025-04-22T22-12-26Z
     command: server /data --console-address ":9001"

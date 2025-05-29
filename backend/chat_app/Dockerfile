@@ -20,11 +20,11 @@ RUN mix deps.get
 # Copy the rest of the application
 COPY . .
 
-# Ensure deps are up to date in case Git deps changed
+# Ensure deps are up to date and compile
 RUN mix deps.get --only prod && \
     mix compile
 
-# Expose the Phoenix app port (if needed)
+# Expose the Phoenix app port
 EXPOSE 4000
 
 # Start the Phoenix server

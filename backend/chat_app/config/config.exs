@@ -42,7 +42,7 @@ config :ueberauth, Ueberauth,
 config :ueberauth, Ueberauth.Strategy.Google.OAuth,
   client_id: "58516048770-lqsao96iscal7fb850pgmre3cmhpvm6q.apps.googleusercontent.com",
   client_secret: "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",
-  redirect_uri: "http://localhost:4000/auth/google/callback"
+  redirect_uri: "http://localhost:4000/api/auth/google/callback"
 # === End Ueberauth config ===
 
 # Import environment specific config

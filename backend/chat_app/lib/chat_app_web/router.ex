@@ -28,6 +28,4 @@ defmodule ChatAppWeb.Router do
     get "/:provider", AuthController, :request
     get "/:provider/callback", AuthController, :callback
   end
-
-  # No favicon route needed!
 end

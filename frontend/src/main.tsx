@@ -1,10 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
 
-// MUST use `createRoot` (React 18+)
+import MediasoupClient from './components/MediaSoup/MediasoupClient';
+import { GoogleLoginButton } from './components/auth/GoogleLoginButton';
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <GoogleLoginButton />
+    <MediasoupClient />
   </React.StrictMode>
 );
