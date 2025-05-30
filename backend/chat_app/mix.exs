@@ -39,6 +39,7 @@ defmodule ChatApp.MixProject do
       {:bandit, "~> 1.5"},
       {:ueberauth, "~> 0.10"},
       {:ueberauth_google, "~> 0.10"},
+      {:cors_plug, "~> 3.0"},
       {:cors_plug, "~> 3.0"}
     ]
   end

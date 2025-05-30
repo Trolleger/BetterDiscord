@@ -1,31 +1,30 @@
-# Use Elixir Alpine as base image
 FROM elixir:1.15-alpine
 
 # Install OS dependencies
-RUN apk add --no-cache build-base git nodejs npm postgresql-client
+RUN apk add --no-cache build-base git nodejs npm postgresql-client inotify-tools
 
-# Set working directory
 WORKDIR /app
 
 # Install Elixir build tools
 RUN mix local.hex --force && \
     mix local.rebar --force
 
-# Copy Elixir project files first (to leverage Docker layer caching)
+# Set development environment
+ENV MIX_ENV=dev
+
+# Copy mix files
 COPY mix.exs mix.lock ./
 
-# Install Elixir deps (this layer caches unless deps change)
+# Install dependencies
 RUN mix deps.get
 
 # Copy the rest of the application
 COPY . .
 
-# Ensure deps are up to date and compile
-RUN mix deps.get --only prod && \
-    mix compile
+# Compile the application
+RUN mix compile
 
-# Expose the Phoenix app port
 EXPOSE 4000
 
-# Start the Phoenix server
+# Use mix phx.server for hot reloading in dev
 CMD ["mix", "phx.server"]

@@ -1,7 +1,7 @@
 import Config
 
 # Auto-generate development secret key (safe for local use)
-secret_key_base = System.get_env("SECRET_KEY_BASE") || 
+secret_key_base = System.get_env("SECRET_KEY_BASE") ||
   "dev_" <> (:crypto.strong_rand_bytes(64) |> Base.url_encode64() |> binary_part(0, 64))
 
 # Database Configuration (CockroachDB optimized)
@@ -34,7 +34,14 @@ config :chat_app, ChatAppWeb.Endpoint,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
-  watchers: []
+  watchers: [],
+  # Add CORS configuration
+  cors: [
+    origin: ["http://localhost", "http://localhost:80", "http://127.0.0.1", "http://127.0.0.1:80"],
+    credentials: true,
+    headers: ["content-type", "authorization", "x-requested-with"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+  ]
 
 # Logger
 config :logger, :console,
@@ -48,3 +55,11 @@ config :phoenix, :plug_init_mode, :runtime
 # Environment flags
 config :chat_app, dev_routes: false
 config :swoosh, :api_client, false
+
+# Session configuration for OAuth
+config :chat_app, ChatAppWeb.Endpoint,
+  session: [
+    store: :cookie,
+    key: "_chat_app_key",
+    signing_salt: "signing_salt_here"
+  ]

@@ -3,6 +3,7 @@ defmodule ChatAppWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug CORSPlug, origin: ["http://localhost", "http://localhost:80"]
   end
 
   pipeline :auth do
@@ -15,17 +16,17 @@ defmodule ChatAppWeb.Router do
     get "/", StatusController, :status
   end
 
+  # OAuth Routes - match Google Console settings
+  scope "/", ChatAppWeb do
+    pipe_through [:api, :auth]
+    get "/auth/:provider", AuthController, :request
+    get "/auth/:provider/callback", AuthController, :callback
+  end
+
   # API Routes
   scope "/api", ChatAppWeb do
     pipe_through :api
     get "/status", StatusController, :status
     # Add other API endpoints here
-  end
-
-  # OAuth Routes
-  scope "/api/auth", ChatAppWeb do
-    pipe_through [:api, :auth]
-    get "/:provider", AuthController, :request
-    get "/:provider/callback", AuthController, :callback
   end
 end

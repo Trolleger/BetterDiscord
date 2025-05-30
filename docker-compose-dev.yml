@@ -1,3 +1,4 @@
+version: "3.9"
 
 services:
   cockroachdb:
@@ -81,7 +82,7 @@ services:
     volumes:
       - ./mediasoup-server:/app
       - mediasoup_modules:/app/node_modules
-    command: sh -c "npm install && npm start"
+    command: sh -c "yarn install && yarn start"
     ports:
       - "3001:3001"
       - "40000-40100:40000-40100/udp"
@@ -107,12 +108,15 @@ services:
   frontend:
     build:
       context: ./frontend
+      dockerfile: Dockerfile.dev
       args:
         - BUILDKIT_INLINE_CACHE=1
     ports:
-      - "80:80"
+      - "3000:3000"
     volumes:
-      - ./frontend/build:/usr/share/nginx/html:ro
+      - ./frontend:/app
+      - /app/node_modules
+    command: yarn dev
     networks:
       - betterdiscord
     depends_on:

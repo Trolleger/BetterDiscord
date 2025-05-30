@@ -1,19 +1,29 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  optimizeDeps: {
+    include: ["mediasoup-client"],
+    esbuildOptions: {
+      target: "esnext",
+    },
+  },
   server: {
+    host: "0.0.0.0",
     port: 3000,
-    open: true,
+    strictPort: true,
+    fs: {
+      strict: false,
+    },
   },
   build: {
-    outDir: 'build',    // Build files here
-    emptyOutDir: true,
-  },
-  base: './',            // crucial for Electron relative paths
-  publicDir: false,      // disables the /public folder copying
-  resolve: {
-    extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    target: "esnext",
   },
 });

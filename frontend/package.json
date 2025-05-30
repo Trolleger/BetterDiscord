@@ -3,19 +3,22 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "vite",
-    "dev": "vite",
+    "start": "vite --host 0.0.0.0",
+    "dev": "vite --host 0.0.0.0",
     "build": "vite build",
+    "rebuild": "rm -rf dist build node_modules/.vite && yarn build",
     "build-main": "tsc --project tsconfig.json",
     "electron": "yarn build && yarn build-main && electron ./dist/main.js",
     "electron:dev": "ts-node ./main.ts",
-    "web": "vite",
+    "web": "vite --host 0.0.0.0",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "expo:start": "expo start",
     "expo:android": "expo start --android",
     "expo:ios": "expo start --ios",
-    "expo:web": "expo start --web"
+    "expo:web": "expo start --web",
+    "docker:rebuild": "docker-compose down && docker-compose build --no-cache && docker-compose up -d",
+    "docker:fresh": "docker-compose down && docker system prune -f && docker-compose build --no-cache --pull && docker-compose up -d"
   },
   "dependencies": {
     "@expo/webpack-config": "^19.0.1",
@@ -23,6 +26,7 @@
     "electron": "36.1.0",
     "expo": "^53.0.9",
     "expo-status-bar": "^2.2.3",
+    "mediasoup-client": "^3.11.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-native": "^0.79.2",
@@ -47,7 +51,7 @@
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.8.3",
-    "vite": "^6.3.5"
+    "vite": "^4.4.9"
   },
   "homepage": ".",
   "browserslist": {
