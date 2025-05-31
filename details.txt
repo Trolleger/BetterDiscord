@@ -20,7 +20,7 @@ docker-compose -f docker-compose-dev.yml logs backend
 docker-compose -f docker-compose-dev.yml logs coturn
 
 # Check mediasoup logs
-docker-compose -f docker-compose-dev.yml logs mediasoup
+docker-compose -f docker-compose-dev.yml logs mediasoup-server
 
 # Check minio logs
 docker-compose -f docker-compose-dev.yml logs minio
@@ -28,6 +28,7 @@ docker-compose -f docker-compose-dev.yml logs minio
 # Check frontend logs
 docker-compose -f docker-compose-dev.yml logs frontend
 
+docker-compose -f docker-compose-dev.yml up mediasoup-server
 
 
 

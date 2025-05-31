@@ -1,34 +1,11 @@
 defmodule ChatApp.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
-  @moduledoc false
-
   use Application
 
   @impl true
   def start(_type, _args) do
-    # Start Mediasoup worker and router here:
-    {:ok, worker} = :mediasoup.createWorker()
-
-    media_codecs = [
-      %{
-        kind: "audio",
-        mimeType: "audio/opus",
-        clockRate: 48000,
-        channels: 2
-      },
-      %{
-        kind: "video",
-        mimeType: "video/VP8",
-        clockRate: 90000,
-        parameters: %{}
-      }
-    ]
-
-    {:ok, router} = :mediasoup_worker.createRouter(worker, %{mediaCodecs: media_codecs})
-
-    # Store router PID globally for access in channels:
-    :persistent_term.put(:mediasoup_router, router)
+    # NOTE: This mediasoup call will fail because there is NO Elixir mediasoup binding.
+    # You must run mediasoup server separately in Node.js (as discussed).
+    # Remove mediasoup logic here or use a client WebSocket connection to Node mediasoup server instead.
 
     children = [
       ChatAppWeb.Telemetry,
@@ -36,7 +13,9 @@ defmodule ChatApp.Application do
       {DNSCluster, query: Application.get_env(:chat_app, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: ChatApp.PubSub},
       {Finch, name: ChatApp.Finch},
-      ChatAppWeb.Endpoint
+      ChatAppWeb.Endpoint,
+      # Start the mediasoup client WebSocket connector
+      {ChatApp.MediasoupClient, "ws://mediasoup-server:3000"}
     ]
 
     opts = [strategy: :one_for_one, name: ChatApp.Supervisor]

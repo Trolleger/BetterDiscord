@@ -1,41 +1,25 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Device } from "mediasoup-client";
 
 export function useMediasoup(routerRtpCapabilities: any) {
   const [device, setDevice] = useState<Device | null>(null);
   const [sendTransport, setSendTransport] = useState<any>(null);
-  const socket = useRef<WebSocket>(null);
 
   useEffect(() => {
-    socket.current = new WebSocket("ws://localhost:4000/socket/websocket");
+    const socket = new WebSocket("ws://localhost:3001");
 
-    socket.current.onopen = () => {
-      // Join mediasoup channel
-      socket.current?.send(
-        JSON.stringify({
-          event: "phx_join",
-          topic: "mediasoup:lobby",
-          payload: {},
-          ref: "1",
-        })
-      );
-
-      // Request to create send transport
-      socket.current?.send(
-        JSON.stringify({
-          event: "createWebRtcTransport",
-          topic: "mediasoup:lobby",
-          payload: { direction: "send" },
-          ref: "2",
-        })
-      );
+    socket.onopen = () => {
+      console.log("Connected to mediasoup server");
+      // Example: send a message to create send transport (you need to implement on server)
+      socket.send(JSON.stringify({ action: "createWebRtcTransport", direction: "send" }));
     };
 
-    socket.current.onmessage = async (event) => {
+    socket.onmessage = async (event) => {
       const msg = JSON.parse(event.data);
+      console.log("Message from server:", msg);
 
-      if (msg.event === "transportCreated") {
-        const params = msg.payload;
+      if (msg.action === "transportCreated") {
+        const params = msg.data;
 
         const newDevice = new Device();
         await newDevice.load({ routerRtpCapabilities });
@@ -43,18 +27,13 @@ export function useMediasoup(routerRtpCapabilities: any) {
         const transport = newDevice.createSendTransport(params);
 
         transport.on("connect", ({ dtlsParameters }, callback, errback) => {
-          socket.current?.send(
+          socket.send(
             JSON.stringify({
-              event: "connectTransport",
-              topic: "mediasoup:lobby",
-              payload: {
-                transportId: params.id,
-                dtlsParameters,
-              },
-              ref: "3",
+              action: "connectTransport",
+              transportId: params.id,
+              dtlsParameters,
             })
           );
-          // Assume success for now
           callback();
         });
 
@@ -62,17 +41,17 @@ export function useMediasoup(routerRtpCapabilities: any) {
         setSendTransport(transport);
       }
 
-      if (msg.event === "connectTransportSuccess") {
-        console.log("Transport connected:", msg.payload.transportId);
-      }
-
-      if (msg.event === "error") {
-        console.error("Mediasoup error:", msg.payload.reason);
+      if (msg.action === "error") {
+        console.error("Mediasoup error:", msg.reason);
       }
     };
 
+    socket.onerror = (err) => {
+      console.error("WebSocket error:", err);
+    };
+
     return () => {
-      socket.current?.close();
+      socket.close();
     };
   }, [routerRtpCapabilities]);
 

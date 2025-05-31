@@ -13,6 +13,6 @@ RUN apt-get update && apt-get install -y \
     && ln -sf /usr/bin/python3 /usr/bin/python \
     && rm -rf /var/lib/apt/lists/*
 
-# Install yarn globally
+RUN yarn install
 
 CMD ["tail", "-f", "/dev/null"]

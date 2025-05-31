@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   cockroachdb:
     container_name: cockroachdb
@@ -28,7 +30,6 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  # Database initialization service
   db-init:
     container_name: db-init
     image: cockroachdb/cockroach:v22.2.8
@@ -57,10 +58,10 @@ services:
       MIX_ENV: "dev"
       PHX_HOST: "0.0.0.0"
       ERL_FLAGS: "+fnu"
+      MEDIASOUP_WS_URL: "ws://mediasoup-server:3000"  # Internal Docker DNS
     ports:
       - "4000:4000"
     volumes:
-      # Only mount source code, use named volumes for build artifacts
       - ./backend/chat_app:/app:delegated
       - backend_deps:/app/deps
       - backend_build:/app/_build
@@ -96,17 +97,21 @@ services:
     container_name: mediasoup-server
     build:
       context: ./mediasoup-server
-      dockerfile: Dockerfile
-    working_dir: /app
+    environment:
+      - MEDIASOUP_LISTEN_IP=0.0.0.0
+      - MEDIASOUP_ANNOUNCED_IP=127.0.0.1  # Critical for WebRTC
+      - NODE_ENV=development
+    ports:
+      - "3000:3000/tcp"  # Changed from 3001 to match server.js
+      - "40000-40100:40000-40100/udp"
     volumes:
       - ./mediasoup-server:/app
       - mediasoup_modules:/app/node_modules
-    command: sh -c "yarn install && yarn start"
-    ports:
-      - "3001:3001"
-      - "40000-40100:40000-40100/udp"
+    command: sh -c "yarn install && node server.js"
     networks:
       - betterdiscord
+    extra_hosts:  # Required for Windows/Mac
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   minio:
@@ -132,8 +137,10 @@ services:
       dockerfile: Dockerfile.dev
       args:
         - BUILDKIT_INLINE_CACHE=1
+    environment:
+      - VITE_MEDIASOUP_WS_URL=ws://127.0.0.1:3000  # Connect from host
     ports:
-      - "3000:3000"
+      - "3001:3000"  # Avoid port conflict
     volumes:
       - ./frontend:/app
       - /app/node_modules
