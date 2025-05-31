@@ -56,12 +56,15 @@ services:
       GOOGLE_CLIENT_SECRET: "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"
       MIX_ENV: "dev"
       PHX_HOST: "0.0.0.0"
+      ERL_FLAGS: "+fnu"
     ports:
       - "4000:4000"
     volumes:
-      - ./backend/chat_app:/app
+      # Only mount source code, use named volumes for build artifacts
+      - ./backend/chat_app:/app:delegated
       - backend_deps:/app/deps
       - backend_build:/app/_build
+      - backend_tmp:/app/tmp
       - ./certs:/app/priv/certs:ro
     networks:
       - betterdiscord
@@ -145,6 +148,7 @@ volumes:
   cockroach-data:
   backend_deps:
   backend_build:
+  backend_tmp:
   mediasoup_modules:
   minio-data:
 

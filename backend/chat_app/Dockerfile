@@ -1,30 +1,27 @@
 FROM elixir:1.15-alpine
 
-# Install OS dependencies
 RUN apk add --no-cache build-base git nodejs npm postgresql-client inotify-tools
 
 WORKDIR /app
 
-# Install Elixir build tools
-RUN mix local.hex --force && \
-    mix local.rebar --force
+# Install Hex and Rebar (mix build tools)
+RUN mix local.hex --force && mix local.rebar --force
 
-# Set development environment
-ENV MIX_ENV=dev
-
-# Copy mix files
+# Copy ONLY mix.exs and mix.lock first (key for caching and locking)
 COPY mix.exs mix.lock ./
 
-# Install dependencies
-RUN mix deps.get
+# Fetch and compile dependencies respecting the lock file
+RUN mix deps.get --only dev
+RUN mix deps.compile
 
-# Copy the rest of the application
+# Now copy the rest of the source code
 COPY . .
 
-# Compile the application
+# Compile your app
 RUN mix compile
+
+RUN mkdir -p /app/_build /app/deps /app/tmp && chmod -R 777 /app/_build /app/deps /app/tmp
 
 EXPOSE 4000
 
-# Use mix phx.server for hot reloading in dev
 CMD ["mix", "phx.server"]

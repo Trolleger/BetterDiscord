@@ -7,27 +7,42 @@ defmodule ChatApp.Application do
 
   @impl true
   def start(_type, _args) do
+    # Start Mediasoup worker and router here:
+    {:ok, worker} = :mediasoup.createWorker()
+
+    media_codecs = [
+      %{
+        kind: "audio",
+        mimeType: "audio/opus",
+        clockRate: 48000,
+        channels: 2
+      },
+      %{
+        kind: "video",
+        mimeType: "video/VP8",
+        clockRate: 90000,
+        parameters: %{}
+      }
+    ]
+
+    {:ok, router} = :mediasoup_worker.createRouter(worker, %{mediaCodecs: media_codecs})
+
+    # Store router PID globally for access in channels:
+    :persistent_term.put(:mediasoup_router, router)
+
     children = [
       ChatAppWeb.Telemetry,
       ChatApp.Repo,
       {DNSCluster, query: Application.get_env(:chat_app, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: ChatApp.PubSub},
-      # Start the Finch HTTP client for sending emails
       {Finch, name: ChatApp.Finch},
-      # Start a worker by calling: ChatApp.Worker.start_link(arg)
-      # {ChatApp.Worker, arg},
-      # Start to serve requests, typically the last entry
       ChatAppWeb.Endpoint
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: ChatApp.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
-  # Tell Phoenix to update the endpoint configuration
-  # whenever the application is updated.
   @impl true
   def config_change(changed, _new, removed) do
     ChatAppWeb.Endpoint.config_change(changed, removed)

@@ -1,0 +1,24 @@
+# Ignore build artifacts
+_build/
+deps/
+node_modules/
+
+# Ignore editor and system files
+*.swp
+*.swo
+.DS_Store
+*.log
+
+# Ignore secrets and local config
+secrets/
+.env
+
+# Ignore test coverage and temp files
+.coverage/
+tmp/
+test/
+
+# Ignore anything else that bloats the build context
+.git/
+.gitignore
+docker-compose*.yml
