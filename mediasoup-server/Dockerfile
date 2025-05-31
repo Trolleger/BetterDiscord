@@ -1,14 +1,19 @@
-FROM node:20-alpine
+FROM node:20-bullseye
 
 WORKDIR /app
 
-RUN apk add \
-    python3 py3-pip make g++ bash linux-headers musl-dev
+# Install build dependencies once and cache them in the image layer
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    make \
+    g++ \
+    gcc \
+    build-essential \
+    && ln -sf /usr/bin/python3 /usr/bin/python \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY package.json yarn.lock ./
+# Install yarn globally
+RUN npm install -g yarn
 
-RUN yarn install --frozen-lockfile
-
-COPY . .
-
-CMD ["node", "server.js"]
+CMD ["tail", "-f", "/dev/null"]

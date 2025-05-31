@@ -77,7 +77,9 @@ services:
 
   mediasoup:
     container_name: mediasoup-server
-    image: node:20-alpine
+    build:
+      context: ./mediasoup-server
+      dockerfile: Dockerfile.dev
     working_dir: /app
     volumes:
       - ./mediasoup-server:/app
