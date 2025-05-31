@@ -14,6 +14,5 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install yarn globally
-RUN npm install -g yarn
 
 CMD ["tail", "-f", "/dev/null"]

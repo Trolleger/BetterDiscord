@@ -1,3 +1,46 @@
+# Step into the container
+docker-compose -f docker-compose-dev.yml exec cockroachdb bash
+
+# Then run inside the container:
+./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb -e "CREATE DATABASE chat_app_dev;"
+
+# Exit when done
+exit
+
+FOR DEV!
+docker-compose -f docker-compose-dev.yml up -d --build
+
+# Check CockroachDB logs
+docker-compose -f docker-compose-dev.yml logs cockroachdb
+
+# Check backend logs
+docker-compose -f docker-compose-dev.yml logs backend
+
+# Check coturn logs
+docker-compose -f docker-compose-dev.yml logs coturn
+
+# Check mediasoup logs
+docker-compose -f docker-compose-dev.yml logs mediasoup
+
+# Check minio logs
+docker-compose -f docker-compose-dev.yml logs minio
+
+# Check frontend logs
+docker-compose -f docker-compose-dev.yml logs frontend
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 docker-compose exec backend mix ecto.create
 docker-compose exec backend mix ecto.migrate
 

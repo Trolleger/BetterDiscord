@@ -40,7 +40,6 @@ defmodule ChatApp.MixProject do
       {:ueberauth, "~> 0.10"},
       {:ueberauth_google, "~> 0.10"},
       {:cors_plug, "~> 3.0"},
-      {:cors_plug, "~> 3.0"}
     ]
   end
 
