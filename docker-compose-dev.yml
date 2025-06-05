@@ -1,20 +1,17 @@
-version: '3.8'
-
 services:
   cockroachdb:
     container_name: cockroachdb
     image: cockroachdb/cockroach:v22.2.8
-    volumes:
-      - ./certs:/cockroach/certs:ro
-      - cockroach-data:/cockroach/cockroach-data
     command: >
       start-single-node
       --certs-dir=/cockroach/certs
-      --listen-addr=0.0.0.0:26257
+      --listen-addr=127.0.0.1:26257
       --advertise-addr=cockroachdb:26257
-      --http-addr=0.0.0.0:8080
-      --sql-addr=0.0.0.0:26257
-      --max-offset=2s
+      --http-addr=127.0.0.1:8080
+      --accept-sql-without-tls
+    volumes:
+      - ./certs:/cockroach/certs:ro
+      - cockroach-data:/cockroach/cockroach-data
     ports:
       - "26257:26257"
       - "8080:8080"
@@ -23,11 +20,11 @@ services:
         aliases:
           - cockroachdb
     healthcheck:
-      test: ["CMD-SHELL", "curl -f https://127.0.0.1:8080/health?ready=1 --cacert /cockroach/certs/ca.crt || exit 1"]
-      interval: 15s
-      timeout: 45s
-      retries: 20
-      start_period: 30s
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/health?ready=1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
     restart: unless-stopped
 
   db-init:
