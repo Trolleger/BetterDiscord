@@ -9,7 +9,7 @@ if config_env() == :prod do
     System.get_env("DATABASE_URL") ||
       raise """
       environment variable DATABASE_URL is missing.
-      For example: postgresql://root@cockroachdb:26257/chat_app_dev?sslmode=disable
+      For example: postgresql://root@cockroachdb:26257/chat_app_dev?sslmode=require
       """
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
@@ -17,7 +17,9 @@ if config_env() == :prod do
   config :chat_app, ChatApp.Repo,
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-    socket_options: maybe_ipv6 ++ [:inet]  # Windows compatibility
+    socket_options: maybe_ipv6 ++ [:inet],
+    ssl: true,
+    cacertfile: "/certs/ca.crt"   # Make sure this matches your Docker mount
 
   secret_key_base =
     System.get_env("SECRET_KEY_BASE") ||
