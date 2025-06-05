@@ -6,8 +6,8 @@ interface GoogleLoginButtonProps {
 
 export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ apiBaseUrl }) => {
   const handleGoogleLogin = () => {
-    // Redirect to the backend's Google OAuth endpoint
-    window.location.href = `${apiBaseUrl}/auth/google`;
+    // Fixed: Call the REQUEST endpoint, not the callback
+    window.location.href = `http://localhost:4000/auth/google`;
   };
 
   return (

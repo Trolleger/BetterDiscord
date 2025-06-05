@@ -15,7 +15,6 @@ defmodule ChatApp.Application do
       {Finch, name: ChatApp.Finch},
       ChatAppWeb.Endpoint,
       # Start the mediasoup client WebSocket connector
-      {ChatApp.MediasoupClient, "ws://mediasoup-server:3000"}
     ]
 
     opts = [strategy: :one_for_one, name: ChatApp.Supervisor]

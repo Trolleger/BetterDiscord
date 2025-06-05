@@ -1,34 +1,32 @@
 import Config
 
-# Auto-generate development secret key (safe for local use)
-secret_key_base = System.get_env("SECRET_KEY_BASE") ||
-  "dev_" <> (:crypto.strong_rand_bytes(64) |> Base.url_encode64() |> binary_part(0, 64))
+# Check if certificates exist before trying to use SSL
+cert_base_path = Path.expand("../../certs", __DIR__)
+ca_cert_path = Path.join(cert_base_path, "ca.crt")
+client_cert_path = Path.join(cert_base_path, "client.root.crt")
+client_key_path = Path.join(cert_base_path, "client.root.key")
 
-# Determine if we're running in Docker or locally
-in_docker = System.get_env("DATABASE_URL") != nil
-hostname = if in_docker, do: "cockroachdb", else: "localhost"
-
-# Certificate paths - different for Docker vs local
-cert_base_path = if in_docker do
-  "/app/priv/certs"
+# Only use SSL if all certificate files exist
+ssl_config = if File.exists?(ca_cert_path) and File.exists?(client_cert_path) and File.exists?(client_key_path) do
+  [
+    cacertfile: ca_cert_path,
+    certfile: client_cert_path,
+    keyfile: client_key_path,
+    verify: :verify_peer
+  ]
 else
-  Path.expand("../../certs", __DIR__)
+  false
 end
 
-# Database Configuration (CockroachDB with SSL)
+# Database Configuration (CockroachDB with conditional SSL)
 config :chat_app, ChatApp.Repo,
   username: "root",
   password: "",
-  hostname: hostname,
+  hostname: "localhost",
   port: 26257,
   database: "chat_app_dev",
   pool_size: 10,
-  ssl: [
-    cacertfile: Path.join(cert_base_path, "ca.crt"),
-    certfile: Path.join(cert_base_path, "client.root.crt"),
-    keyfile: Path.join(cert_base_path, "client.root.key"),
-    verify: :verify_peer
-  ],
+  ssl: ssl_config,
   migration_lock: nil,
   migration_primary_key: [type: :uuid],
   migration_foreign_key: [type: :uuid],
@@ -41,29 +39,13 @@ config :chat_app, ChatApp.Repo,
   show_sensitive_data_on_connection_error: true,
   stacktrace: true
 
-# Endpoint Configuration
+# Endpoint Configuration - API only, no watchers
 config :chat_app, ChatAppWeb.Endpoint,
   http: [ip: {0, 0, 0, 0}, port: 4000],
-  secret_key_base: secret_key_base,
+  secret_key_base: "T4C7UbFwRlBzizEK2abrkU8kcCE2oKhgdCAvc8Gmhv5L/Dkxor1Irxd9Kn7cX0fz",
   debug_errors: true,
   code_reloader: true,
-  check_origin: false,
-  watchers: [
-    esbuild: {Esbuild, :install_and_run, [:chat_app, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:chat_app, ~w(--watch)]}
-  ],
-  session: [
-    store: :cookie,
-    key: "_chat_app_key",
-    signing_salt: "signing_salt_here"
-  ],
-  live_reload: [
-    patterns: [
-      ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
-      ~r"priv/gettext/.*(po)$",
-      ~r"lib/chat_app_web/(controllers|live|components)/.*(ex|heex)$"
-    ]
-  ]
+  check_origin: false
 
 # CORS Configuration
 config :cors_plug,
@@ -80,7 +62,6 @@ config :logger, :console,
 # Phoenix
 config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime
-config :phoenix_live_view, :debug_heex_annotations, true
 
 # Environment flags
 config :chat_app, dev_routes: true

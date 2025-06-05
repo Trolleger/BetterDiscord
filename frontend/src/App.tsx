@@ -22,7 +22,7 @@ function App() {
   return (
     <div className="p-6 text-white bg-black min-h-screen flex flex-col items-center justify-center">
       <div className="mb-4">
-        <GoogleLoginButton />
+        <GoogleLoginButton apiBaseUrl="http://localhost:4000/auth/google/callback" />
       </div>
       <p className="mt-4 text-center">{msg}</p>
     </div>

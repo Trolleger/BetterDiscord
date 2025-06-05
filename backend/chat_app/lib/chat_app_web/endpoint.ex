@@ -29,9 +29,5 @@ defmodule ChatAppWeb.Endpoint do
 
   plug ChatAppWeb.Router
 
-  # No mediasoup channel reference here
-  # If you want channels, you can define them below, example:
-  # socket "/socket", ChatAppWeb.UserSocket,
-  #   websocket: true,
-  #   longpoll: false
+
 end

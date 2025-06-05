@@ -19,8 +19,7 @@ config :chat_app, ChatAppWeb.Endpoint,
     formats: [json: ChatAppWeb.ErrorJSON],
     layout: false
   ],
-  pubsub_server: ChatApp.PubSub,
-  live_view: [signing_salt: "tZGzsgSe"]
+  pubsub_server: ChatApp.PubSub
 
 # Configures the mailer
 config :chat_app, ChatApp.Mailer, adapter: Swoosh.Adapters.Local
