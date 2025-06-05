@@ -1,28 +1,24 @@
 import Config
 
-# Check if certificates exist before trying to use SSL
+# Certificate paths for secure CockroachDB connection
 cert_base_path = Path.expand("../../certs", __DIR__)
 ca_cert_path = Path.join(cert_base_path, "ca.crt")
 client_cert_path = Path.join(cert_base_path, "client.root.crt")
 client_key_path = Path.join(cert_base_path, "client.root.key")
 
-# Only use SSL if all certificate files exist
-ssl_config = if File.exists?(ca_cert_path) and File.exists?(client_cert_path) and File.exists?(client_key_path) do
-  [
-    cacertfile: ca_cert_path,
-    certfile: client_cert_path,
-    keyfile: client_key_path,
-    verify: :verify_peer
-  ]
-else
-  false
-end
+# SSL configuration for secure CockroachDB
+ssl_config = [
+  cacertfile: ca_cert_path,
+  certfile: client_cert_path,
+  keyfile: client_key_path,
+  verify: :verify_peer
+]
 
-# Database Configuration (CockroachDB with conditional SSL)
+# Database Configuration (CockroachDB with SSL)
 config :chat_app, ChatApp.Repo,
   username: "root",
   password: "",
-  hostname: "localhost",
+  hostname: "cockroachdb",
   port: 26257,
   database: "chat_app_dev",
   pool_size: 10,
@@ -66,3 +62,7 @@ config :phoenix, :plug_init_mode, :runtime
 # Environment flags
 config :chat_app, dev_routes: true
 config :swoosh, :api_client, false
+
+# Configure esbuild and tailwind versions to remove warnings
+config :esbuild, :version, "0.25.0"
+config :tailwind, :version, "4.0.9"

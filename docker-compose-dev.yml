@@ -10,10 +10,10 @@ services:
     command: >
       start-single-node
       --certs-dir=/cockroach/certs
-      --listen-addr=127.0.0.1:26257
+      --listen-addr=0.0.0.0:26257
       --advertise-addr=cockroachdb:26257
-      --http-addr=127.0.0.1:8080
-      --sql-addr=cockroachdb:26257
+      --http-addr=0.0.0.0:8080
+      --sql-addr=0.0.0.0:26257
       --max-offset=2s
     ports:
       - "26257:26257"
@@ -58,7 +58,7 @@ services:
       MIX_ENV: "dev"
       PHX_HOST: "0.0.0.0"
       ERL_FLAGS: "+fnu"
-      MEDIASOUP_WS_URL: "ws://mediasoup-server:3000"  # Internal Docker DNS
+      MEDIASOUP_WS_URL: "ws://mediasoup-server:3000"
     ports:
       - "4000:4000"
     volumes:
@@ -99,10 +99,10 @@ services:
       context: ./mediasoup-server
     environment:
       - MEDIASOUP_LISTEN_IP=0.0.0.0
-      - MEDIASOUP_ANNOUNCED_IP=127.0.0.1  # Critical for WebRTC
+      - MEDIASOUP_ANNOUNCED_IP=127.0.0.1
       - NODE_ENV=development
     ports:
-      - "3000:3000/tcp"  # Changed from 3001 to match server.js
+      - "3000:3000/tcp"
       - "40000-40100:40000-40100/udp"
     volumes:
       - ./mediasoup-server:/app
@@ -110,7 +110,7 @@ services:
     command: sh -c "yarn install && node server.js"
     networks:
       - betterdiscord
-    extra_hosts:  # Required for Windows/Mac
+    extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
@@ -138,9 +138,9 @@ services:
       args:
         - BUILDKIT_INLINE_CACHE=1
     environment:
-      - VITE_MEDIASOUP_WS_URL=ws://127.0.0.1:3000  # Connect from host
+      - VITE_MEDIASOUP_WS_URL=ws://127.0.0.1:3000
     ports:
-      - "3001:3000"  # Avoid port conflict
+      - "3001:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules

@@ -2,7 +2,7 @@ defmodule ChatAppWeb.AuthController do
   use ChatAppWeb, :controller
   plug Ueberauth
 
-  def request(conn, %{"provider" => provider}) do
+  def request(conn, %{"provider" => _provider}) do
     # Ueberauth handles the redirect automatically
     conn
   end
