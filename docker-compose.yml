@@ -1,17 +1,16 @@
-version: '3.8'
-
 services:
   cockroachdb:
+    image: cockroachdb/cockroach:v24.3.14
     container_name: cockroachdb
-    image: cockroachdb/cockroach:v22.2.8
-    command: >
-      start-single-node
-      --certs-dir=/cockroach/certs
-      --listen-addr=localhost:26257
-      --advertise-addr=cockroachdb:26257
-      --http-addr=localhost:8080
-      --accept-sql-without-tls
-      --host=0.0.0.0
+    command: 
+      - "start-single-node"
+      - "--certs-dir=/cockroach/certs"
+      - "--listen-addr=127.0.0.1:26257"
+      - "--advertise-addr=cockroachdb:26257"
+      - "--http-addr=127.0.0.1:8080"
+      - "--sql-addr=cockroachdb:26257"
+    environment:
+      - "TZ=UTC"
     volumes:
       - ./certs:/cockroach/certs:ro
       - cockroach-data:/cockroach/cockroach-data
@@ -23,26 +22,35 @@ services:
         aliases:
           - cockroachdb
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health?ready=1"]
+      test: ["CMD", "curl", "-f", "--cacert", "/cockroach/certs/ca.crt", "https://127.0.0.1:8080/health?ready=1"]
       interval: 10s
       timeout: 5s
-      retries: 15
-      start_period: 90s
+      retries: 30
+      start_period: 120s
     restart: unless-stopped
 
   db-init:
     container_name: db-init
-    image: cockroachdb/cockroach:v22.2.8
+    image: cockroachdb/cockroach:v24.3.14
+    depends_on:
+      cockroachdb:
+        condition: service_healthy
+    command:
+      - "bash"
+      - "-c"
+      - |
+        echo "CockroachDB is ready. Creating database and user if needed..."
+        # Only run necessary setup commands here, not cockroach init
+        ./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 -e "
+          CREATE DATABASE IF NOT EXISTS defaultdb;
+          CREATE USER IF NOT EXISTS root;
+          GRANT ALL ON DATABASE defaultdb TO root;
+        " || true
+        echo "Database setup complete."
     volumes:
       - ./certs:/cockroach/certs:ro
     networks:
       - betterdiscord
-    depends_on:
-      cockroachdb:
-        condition: service_healthy
-    command: >
-      sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 
-      --execute="CREATE DATABASE IF NOT EXISTS chat_app_dev;"
     restart: "no"
 
   backend:
@@ -58,6 +66,7 @@ services:
       PHX_HOST: "0.0.0.0"
       ERL_FLAGS: "+fnu"
       MEDIASOUP_WS_URL: "ws://mediasoup-server:3000"
+      DATABASE_URL: "postgres://root@cockroachdb:26257/defaultdb?sslmode=verify-full&sslcert=/certs/client.root.crt&sslkey=/certs/client.root.key&sslrootcert=/certs/ca.crt"
     ports:
       - "127.0.0.1:4000:4000"
     volumes:
@@ -98,7 +107,7 @@ services:
       context: ./mediasoup-server
     environment:
       - MEDIASOUP_LISTEN_IP=0.0.0.0
-      - MEDIASOUP_ANNOUNCED_IP=127.0.0.1
+      - MEDIASOUP_ANNOUNCED_IP=host.docker.internal
       - NODE_ENV=development
     ports:
       - "127.0.0.1:3000:3000/tcp"
@@ -136,7 +145,7 @@ services:
       args:
         - BUILDKIT_INLINE_CACHE=1
     environment:
-      - VITE_MEDIASOUP_WS_URL=ws://127.0.0.1:3000
+      - VITE_MEDIASOUP_WS_URL=ws://host.docker.internal:3000
     ports:
       - "127.0.0.1:3001:3000"
     volumes:
