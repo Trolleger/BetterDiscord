@@ -1,103 +1,127 @@
+version: '3.8'
 
 services:
   cockroachdb:
     container_name: cockroachdb
     image: cockroachdb/cockroach:v22.2.8
-    command:
-      - start-single-node
-      - --insecure
-      - --listen-addr=localhost:26257
-      - --http-addr=0.0.0.0:8080
-      - --sql-addr=cockroachdb:26257
-      - --accept-sql-without-tls
-    environment:
-      COCKROACH_ALLOW_INTERNET_ACCESS: "true"
-    ports:
-      - "26258:26257"
-      - "8080:8080"
+    command: >
+      start-single-node
+      --certs-dir=/cockroach/certs
+      --listen-addr=localhost:26257
+      --advertise-addr=cockroachdb:26257
+      --http-addr=localhost:8080
+      --accept-sql-without-tls
+      --host=0.0.0.0
     volumes:
+      - ./certs:/cockroach/certs:ro
       - cockroach-data:/cockroach/cockroach-data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health?ready=1 || exit 1"]
-      interval: 15s
-      timeout: 45s
-      retries: 20
-      start_period: 30s
+    ports:
+      - "127.0.0.1:26257:26257"
+      - "127.0.0.1:8080:8080"
     networks:
       betterdiscord:
         aliases:
           - cockroachdb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health?ready=1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 90s
     restart: unless-stopped
 
-  backend:
-    build:
-      context: ./backend/chat_app
-      args:
-        - BUILDKIT_INLINE_CACHE=1
-    environment:
-      DATABASE_URL: "postgresql://root@cockroachdb:26257/chat_app_dev?sslmode=disable"
-      GOOGLE_CLIENT_ID: "58516048770-lqsao96iscal7fb850pgmre3cmhpvm6q.apps.googleusercontent.com"
-      GOOGLE_CLIENT_SECRET: "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"
-      MIX_ENV: "dev"
-      PHX_HOST: "0.0.0.0"
-    ports:
-      - "4000:4000"
+  db-init:
+    container_name: db-init
+    image: cockroachdb/cockroach:v22.2.8
     volumes:
-      - ./backend/chat_app:/app
-      - backend_deps:/app/deps
-      - backend_build:/app/_build
+      - ./certs:/cockroach/certs:ro
     networks:
       - betterdiscord
     depends_on:
       cockroachdb:
         condition: service_healthy
+    command: >
+      sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 
+      --execute="CREATE DATABASE IF NOT EXISTS chat_app_dev;"
+    restart: "no"
+
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    env_file:
+      - ./env/.env
+    environment:
+      MIX_ENV: "dev"
+      PHX_HOST: "0.0.0.0"
+      ERL_FLAGS: "+fnu"
+      MEDIASOUP_WS_URL: "ws://mediasoup-server:3000"
+    ports:
+      - "127.0.0.1:4000:4000"
+    volumes:
+      - ./backend:/app:delegated
+      - backend_deps:/app/deps
+      - backend_build:/app/_build
+      - backend_tmp:/app/tmp
+      - ./certs:/certs:ro
+    networks:
+      - betterdiscord
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      cockroachdb:
+        condition: service_healthy
     restart: unless-stopped
 
-  coturn:
+  betterdiscord-coturn:
     container_name: betterdiscord-coturn
     image: instrumentisto/coturn:4.5.2
     ports:
-      - "3478:3478/tcp"
-      - "3478:3478/udp"
-      - "50000-51000:50000-51000/udp"
+      - "127.0.0.1:3478:3478/tcp"
+      - "127.0.0.1:3478:3478/udp"
+      - "127.0.0.1:60000-60200:60000-60200/udp"
     volumes:
-      - ./backend/chat_app/secrets/turnserver.conf:/etc/coturn/turnserver.conf:ro
+      - ./backend/secrets/turnserver.conf:/etc/coturn/turnserver.conf:ro
     command: >
-      turnserver -c /etc/coturn/turnserver.conf
-      --log-file=stdout
-      --no-tls
-      --no-dtls
-      --cli-password=123456
+      turnserver -c /etc/coturn/turnserver.conf --log-file=stdout
     networks:
       betterdiscord:
         aliases:
           - coturn
     restart: unless-stopped
 
-  mediasoup:
+  mediasoup-server:
     container_name: mediasoup-server
-    image: node:20-alpine
-    working_dir: /app
+    build:
+      context: ./mediasoup-server
+    environment:
+      - MEDIASOUP_LISTEN_IP=0.0.0.0
+      - MEDIASOUP_ANNOUNCED_IP=127.0.0.1
+      - NODE_ENV=development
+    ports:
+      - "127.0.0.1:3000:3000/tcp"
+      - "127.0.0.1:40000-40100:40000-40100/udp"
     volumes:
       - ./mediasoup-server:/app
       - mediasoup_modules:/app/node_modules
-    command: sh -c "npm install && npm start"
-    ports:
-      - "3001:3001"
-      - "40000-40100:40000-40100/udp"
+    command: sh -c "yarn install && node server.js"
     networks:
       - betterdiscord
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   minio:
+    container_name: minio
     image: minio/minio:RELEASE.2025-04-22T22-12-26Z
     command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      - MINIO_ROOT_USER=admin
-      - MINIO_ROOT_PASSWORD=password123
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    env_file:
+      - ./env/.env.minio
     volumes:
       - minio-data:/data
     networks:
@@ -105,14 +129,20 @@ services:
     restart: unless-stopped
 
   frontend:
+    container_name: frontend
     build:
       context: ./frontend
+      dockerfile: Dockerfile.dev
       args:
         - BUILDKIT_INLINE_CACHE=1
+    environment:
+      - VITE_MEDIASOUP_WS_URL=ws://127.0.0.1:3000
     ports:
-      - "80:80"
+      - "127.0.0.1:3001:3000"
     volumes:
-      - ./frontend/build:/usr/share/nginx/html:ro
+      - ./frontend:/app
+      - /app/node_modules
+    command: yarn dev
     networks:
       - betterdiscord
     depends_on:
@@ -121,10 +151,11 @@ services:
 
 volumes:
   cockroach-data:
-  minio-data:
   backend_deps:
   backend_build:
+  backend_tmp:
   mediasoup_modules:
+  minio-data:
 
 networks:
   betterdiscord:
