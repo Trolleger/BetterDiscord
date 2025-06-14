@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   cockroachdb:
     container_name: cockroachdb
@@ -46,7 +48,7 @@ services:
   backend:
     container_name: backend
     build:
-      context: ./backend/chat_app
+      context: ./backend
       args:
         - BUILDKIT_INLINE_CACHE=1
     env_file:
@@ -59,11 +61,11 @@ services:
     ports:
       - "127.0.0.1:4000:4000"
     volumes:
-      - ./backend/chat_app:/app:delegated
+      - ./backend:/app:delegated
       - backend_deps:/app/deps
       - backend_build:/app/_build
       - backend_tmp:/app/tmp
-      - ./certs:/certs:ro          # <== Mount certs directly to /certs
+      - ./certs:/certs:ro
     networks:
       - betterdiscord
     depends_on:
@@ -73,16 +75,15 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-
   betterdiscord-coturn:
     container_name: betterdiscord-coturn
     image: instrumentisto/coturn:4.5.2
     ports:
       - "127.0.0.1:3478:3478/tcp"
       - "127.0.0.1:3478:3478/udp"
-      - "127.0.0.1:50000-50200:50000-50200/udp"
+      - "127.0.0.1:60000-60200:60000-60200/udp"
     volumes:
-      - ./backend/chat_app/secrets/turnserver.conf:/etc/coturn/turnserver.conf:ro
+      - ./backend/secrets/turnserver.conf:/etc/coturn/turnserver.conf:ro
     command: >
       turnserver -c /etc/coturn/turnserver.conf --log-file=stdout
     networks:
@@ -155,7 +156,6 @@ volumes:
   backend_tmp:
   mediasoup_modules:
   minio-data:
-  
 
 networks:
   betterdiscord:
