@@ -30,22 +30,25 @@ services:
     restart: unless-stopped
 
   backend:
+    container_name: backend
     build:
-      context: ./backend/chat_app
+      context: ./backend
       args:
         - BUILDKIT_INLINE_CACHE=1
+    env_file:
+      - ./env/.env
     environment:
-      DATABASE_URL: "postgresql://root@cockroachdb:26257/chat_app_dev?sslmode=disable"
-      GOOGLE_CLIENT_ID: "58516048770-lqsao96iscal7fb850pgmre3cmhpvm6q.apps.googleusercontent.com"
-      GOOGLE_CLIENT_SECRET: "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"
       MIX_ENV: "dev"
       PHX_HOST: "0.0.0.0"
+      GOOGLE_CLIENT_ID: "58516048770-lqsao96iscal7fb850pgmre3cmhpvm6q.apps.googleusercontent.com"
+      GOOGLE_CLIENT_SECRET: "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"
     ports:
-      - "4000:4000"
+      - "127.0.0.1:4000:4000"
     volumes:
-      - ./backend/chat_app:/app
+      - ./backend:/app:delegated
       - backend_deps:/app/deps
       - backend_build:/app/_build
+      - ./certs:/certs:ro
     networks:
       - betterdiscord
     depends_on:

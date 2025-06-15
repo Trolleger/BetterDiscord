@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   cockroachdb:
@@ -7,17 +7,16 @@ services:
     command:
       - start-single-node
       - --certs-dir=/cockroach/certs
-      - --advertise-addr=localhost
-      - --http-addr=0.0.0.0:8080
-      - --listen-addr=127.0.0.1:26257
+      - --advertise-addr=cockroachdb:26257       # internal Docker alias + port
+      - --http-addr=0.0.0.0:8080                  # admin UI on all interfaces
     environment:
       - TZ=UTC
     volumes:
       - ./certs:/cockroach/certs:ro
       - cockroach-data:/cockroach/cockroach-data
     ports:
-      - "26257:26257"
-      - "8080:8080"
+      - "26257:26257"  # SQL port: host → container (must match advertise-addr port)
+      - "8080:8080"    # Admin UI port
     networks:
       betterdiscord:
         aliases:
@@ -37,34 +36,25 @@ services:
       cockroachdb:
         condition: service_healthy
     command:
-      - "bash"
-      - "-c"
+      - bash
+      - -c
       - |
-        # echo "Waiting for CockroachDB to be ready..."
-        # for i in {1..30}; do
-        #   if ./cockroach sql \
-        #     --certs-dir=/cockroach/certs \
-        #     --host=cockroachdb:26257 \
-        #     -e "SELECT 1;" &>/dev/null; then
-        #     echo "Creating database and users..."
-        #     ./cockroach sql \
-        #       --certs-dir=/cockroach/certs \
-        #       --host=cockroachdb:26257 \
-        #       -e "
-        #       CREATE DATABASE IF NOT EXISTS defaultdb;
-        #       CREATE USER IF NOT EXISTS root;
-        #       CREATE USER IF NOT EXISTS craig WITH PASSWORD 'cockroach12938';
-        #       GRANT ALL ON DATABASE defaultdb TO root;
-        #       GRANT ALL ON DATABASE defaultdb TO craig;
-        #       GRANT ADMIN TO craig;
-        #     "
-        #     echo "Database setup complete."
-        #     exit 0
-        #   fi
-        #   sleep 2
-        # done
-        # echo "Failed to connect to CockroachDB after 60 seconds"
-        # exit 1
+        # Wait for CockroachDB to be ready, then initialize
+        for i in {1..30}; do
+          if ./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 -e "SELECT 1;" &>/dev/null; then
+            ./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 -e "
+              CREATE DATABASE IF NOT EXISTS chat_app_dev;
+              CREATE USER IF NOT EXISTS root;
+              CREATE USER IF NOT EXISTS craig WITH PASSWORD 'cockroach12938';
+              GRANT ALL ON DATABASE chat_app_dev TO root;
+              GRANT ALL ON DATABASE chat_app_dev TO craig;
+              GRANT ADMIN TO craig;
+            "
+            exit 0
+          fi
+          sleep 2
+        done
+        exit 1
     volumes:
       - ./certs:/cockroach/certs:ro
     networks:
@@ -82,24 +72,24 @@ services:
     environment:
       MIX_ENV: "dev"
       PHX_HOST: "0.0.0.0"
-      ERL_FLAGS: "+fnu"
-      MEDIASOUP_WS_URL: "ws://mediasoup-server:3000"
-      DATABASE_URL: "postgres://root@cockroachdb:26257/defaultdb?sslmode=verify-full&sslcert=/certs/client.root.crt&sslkey=/certs/client.root.key&sslrootcert=/certs/ca.crt"
+      # Inside Docker network, use port 26257
+      DATABASE_URL: "postgresql://root@cockroachdb:26257/chat_app_dev?sslmode=verify-full&sslcert=/certs/client.root.crt&sslkey=/certs/client.root.key&sslrootcert=/certs/ca.crt"
+      GOOGLE_CLIENT_ID: "58516048770-lqsao96iscal7fb850pgmre3cmhpvm6q.apps.googleusercontent.com"
+      GOOGLE_CLIENT_SECRET: "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"
     ports:
       - "127.0.0.1:4000:4000"
     volumes:
       - ./backend:/app:delegated
       - backend_deps:/app/deps
       - backend_build:/app/_build
-      - backend_tmp:/app/tmp
       - ./certs:/certs:ro
     networks:
       - betterdiscord
     depends_on:
-      db-init:
-        condition: service_completed_successfully
       cockroachdb:
         condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   betterdiscord-coturn:
@@ -180,10 +170,16 @@ volumes:
   cockroach-data:
   backend_deps:
   backend_build:
-  backend_tmp:
   mediasoup_modules:
   minio-data:
 
 networks:
   betterdiscord:
     driver: bridge
+
+# ************************************************************
+# ** DO NOT MODIFY THE CockroachDB SERVICE BELOW **
+# ** Any change to advertise-addr, listen-addr, ports WILL  **
+# ** break CockroachDB startup. This is the exact setup    **
+# ** proven to work with v24.3.14 and secure certs.        **
+# ************************************************************
