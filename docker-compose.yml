@@ -2,27 +2,26 @@ services:
   cockroachdb:
     image: cockroachdb/cockroach:v24.3.14
     container_name: cockroachdb
-    command: 
-      - "start-single-node"
-      - "--certs-dir=/cockroach/certs"
-      - "--listen-addr=127.0.0.1:26257"
-      - "--advertise-addr=cockroachdb:26257"
-      - "--http-addr=127.0.0.1:8080"
-      - "--sql-addr=cockroachdb:26257"
+    command:
+      - start-single-node
+      - --certs-dir=/cockroach/certs
+      - --advertise-addr=localhost:26257
+      - --http-addr=localhost:8080
+      - --accept-sql-without-tls
     environment:
       - "TZ=UTC"
     volumes:
       - ./certs:/cockroach/certs:ro
       - cockroach-data:/cockroach/cockroach-data
     ports:
-      - "127.0.0.1:26257:26257"
-      - "127.0.0.1:8080:8080"
+      - "26257:26257"
+      - "8080:8080"
     networks:
       betterdiscord:
         aliases:
           - cockroachdb
     healthcheck:
-      test: ["CMD", "curl", "-f", "--cacert", "/cockroach/certs/ca.crt", "https://127.0.0.1:8080/health?ready=1"]
+      test: ["CMD", "curl", "-f", "--cacert", "/cockroach/certs/ca.crt", "https://localhost:8080/health?ready=1"]
       interval: 10s
       timeout: 5s
       retries: 30
@@ -40,7 +39,6 @@ services:
       - "-c"
       - |
         echo "CockroachDB is ready. Creating database and user if needed..."
-        # Only run necessary setup commands here, not cockroach init
         ./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 -e "
           CREATE DATABASE IF NOT EXISTS defaultdb;
           CREATE USER IF NOT EXISTS root;
