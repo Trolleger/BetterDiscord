@@ -40,31 +40,31 @@ services:
       - "bash"
       - "-c"
       - |
-        echo "Waiting for CockroachDB to be ready..."
-        for i in {1..30}; do
-          if ./cockroach sql \
-            --certs-dir=/cockroach/certs \
-            --host=cockroachdb:26257 \
-            -e "SELECT 1;" &>/dev/null; then
-            echo "Creating database and users..."
-            ./cockroach sql \
-              --certs-dir=/cockroach/certs \
-              --host=cockroachdb:26257 \
-              -e "
-              CREATE DATABASE IF NOT EXISTS defaultdb;
-              CREATE USER IF NOT EXISTS root;
-              CREATE USER IF NOT EXISTS craig WITH PASSWORD 'cockroach12938';
-              GRANT ALL ON DATABASE defaultdb TO root;
-              GRANT ALL ON DATABASE defaultdb TO craig;
-              GRANT ADMIN TO craig;
-            "
-            echo "Database setup complete."
-            exit 0
-          fi
-          sleep 2
-        done
-        echo "Failed to connect to CockroachDB after 60 seconds"
-        exit 1
+        # echo "Waiting for CockroachDB to be ready..."
+        # for i in {1..30}; do
+        #   if ./cockroach sql \
+        #     --certs-dir=/cockroach/certs \
+        #     --host=cockroachdb:26257 \
+        #     -e "SELECT 1;" &>/dev/null; then
+        #     echo "Creating database and users..."
+        #     ./cockroach sql \
+        #       --certs-dir=/cockroach/certs \
+        #       --host=cockroachdb:26257 \
+        #       -e "
+        #       CREATE DATABASE IF NOT EXISTS defaultdb;
+        #       CREATE USER IF NOT EXISTS root;
+        #       CREATE USER IF NOT EXISTS craig WITH PASSWORD 'cockroach12938';
+        #       GRANT ALL ON DATABASE defaultdb TO root;
+        #       GRANT ALL ON DATABASE defaultdb TO craig;
+        #       GRANT ADMIN TO craig;
+        #     "
+        #     echo "Database setup complete."
+        #     exit 0
+        #   fi
+        #   sleep 2
+        # done
+        # echo "Failed to connect to CockroachDB after 60 seconds"
+        # exit 1
     volumes:
       - ./certs:/cockroach/certs:ro
     networks:
