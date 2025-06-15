@@ -1,11 +1,11 @@
+PLEASE USE POWERSHELL FOR ALL THESE COMMANDS! IDK ITS AUTISTIC! NOT BASH, POWERSHELL WHEN CODING IN THIS IF YOU ARE USING WINDOWS PLEASE USE POWERSHELL!!!!!
+
 # Step into the container
-docker-compose -f docker-compose-dev.yml exec cockroachdb bash
+docker exec -it cockroachdb ./cockroach sql --certs-dir=/cockroach/certs --user=root
 
-# Then run inside the container:
-./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb -e "CREATE DATABASE chat_app_dev;"
 
-# Exit when done
-exit
+
+
 
 FOR DEV!
 docker-compose -f docker-compose-dev.yml up -d --build

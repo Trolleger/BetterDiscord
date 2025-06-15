@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   cockroachdb:
     image: cockroachdb/cockroach:v24.3.14
@@ -5,12 +7,11 @@ services:
     command:
       - start-single-node
       - --certs-dir=/cockroach/certs
-      - --advertise-addr=localhost:26257
+      - --advertise-addr=localhost
       - --http-addr=0.0.0.0:8080
-      - --listen-addr=localhost:26257
-      - --accept-sql-without-tls
+      - --listen-addr=127.0.0.1:26257
     environment:
-      - "TZ=UTC"
+      - TZ=UTC
     volumes:
       - ./certs:/cockroach/certs:ro
       - cockroach-data:/cockroach/cockroach-data
@@ -23,10 +24,10 @@ services:
           - cockroachdb
     healthcheck:
       test: ["CMD", "curl", "-f", "--cacert", "/cockroach/certs/ca.crt", "https://127.0.0.1:8080/health?ready=1"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 30
-      start_period: 120s
+      retries: 20
+      start_period: 30s
     restart: unless-stopped
 
   db-init:
@@ -39,13 +40,31 @@ services:
       - "bash"
       - "-c"
       - |
-        echo "CockroachDB is ready. Creating database and user if needed..."
-        ./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 -e "
-          CREATE DATABASE IF NOT EXISTS defaultdb;
-          CREATE USER IF NOT EXISTS root;
-          GRANT ALL ON DATABASE defaultdb TO root;
-        " || true
-        echo "Database setup complete."
+        echo "Waiting for CockroachDB to be ready..."
+        for i in {1..30}; do
+          if ./cockroach sql \
+            --certs-dir=/cockroach/certs \
+            --host=cockroachdb:26257 \
+            -e "SELECT 1;" &>/dev/null; then
+            echo "Creating database and users..."
+            ./cockroach sql \
+              --certs-dir=/cockroach/certs \
+              --host=cockroachdb:26257 \
+              -e "
+              CREATE DATABASE IF NOT EXISTS defaultdb;
+              CREATE USER IF NOT EXISTS root;
+              CREATE USER IF NOT EXISTS craig WITH PASSWORD 'cockroach12938';
+              GRANT ALL ON DATABASE defaultdb TO root;
+              GRANT ALL ON DATABASE defaultdb TO craig;
+              GRANT ADMIN TO craig;
+            "
+            echo "Database setup complete."
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "Failed to connect to CockroachDB after 60 seconds"
+        exit 1
     volumes:
       - ./certs:/cockroach/certs:ro
     networks:
