@@ -6,7 +6,8 @@ services:
       - start-single-node
       - --certs-dir=/cockroach/certs
       - --advertise-addr=localhost:26257
-      - --http-addr=localhost:8080
+      - --http-addr=0.0.0.0:8080
+      - --listen-addr=localhost:26257
       - --accept-sql-without-tls
     environment:
       - "TZ=UTC"
@@ -21,7 +22,7 @@ services:
         aliases:
           - cockroachdb
     healthcheck:
-      test: ["CMD", "curl", "-f", "--cacert", "/cockroach/certs/ca.crt", "https://localhost:8080/health?ready=1"]
+      test: ["CMD", "curl", "-f", "--cacert", "/cockroach/certs/ca.crt", "https://127.0.0.1:8080/health?ready=1"]
       interval: 10s
       timeout: 5s
       retries: 30
