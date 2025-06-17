@@ -3,10 +3,11 @@ import Config
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||
-      raise """
-      environment variable DATABASE_URL is missing.
-      For example: "postgresql://root@cockroachdb:26257/chat_app_dev?sslmode=verify-full&sslcert=/certs/client.root.crt&sslkey=/certs/client.root.key&sslrootcert=/certs/ca.crt"
-      """
+    raise """
+    environment variable DATABASE_URL is missing.
+    For example: "postgresql://root@cockroachdb:26257/chat_app?sslmode=verify-full&sslcert=/certs/client.root.crt&sslkey=/certs/client.root.key&sslrootcert=/certs/ca.crt"
+    """
+
 
   config :chat_app, ChatApp.Repo,
     url: database_url,

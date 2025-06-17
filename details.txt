@@ -2,13 +2,9 @@ PLEASE USE POWERSHELL FOR ALL THESE COMMANDS! IDK ITS AUTISTIC! NOT BASH, POWERS
 
 # Step into the container
 docker exec -it cockroachdb ./cockroach sql --certs-dir=/cockroach/certs --user=root
-CREATE DATABASE IF NOT EXISTS chat_app_dev;
-CREATE USER IF NOT EXISTS craig WITH PASSWORD 'cockroach12938';
-GRANT ALL ON DATABASE chat_app_dev TO craig;
-GRANT ADMIN TO craig;
 
-
-
+FOR NORMAL DOCKER-COMPOSE-DEV.yml On POWERSHELL
+docker-compose down; docker-compose up -d
 
 FOR DEV!
 docker-compose -f docker-compose-dev.yml up -d --build

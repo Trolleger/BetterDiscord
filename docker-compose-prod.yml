@@ -1,4 +1,4 @@
-
+# THE PROD IS NOT UP TO DATE IN THE FUCKING SLIGHTEST RIGHT NOW
 services:
   cockroachdb:
     container_name: cockroachdb
