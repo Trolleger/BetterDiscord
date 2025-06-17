@@ -11,7 +11,7 @@ config :chat_app, ChatApp.Repo,
     certfile: "/certs/client.root.crt",
     keyfile: "/certs/client.root.key",
     verify: :verify_peer,
-    server_name_indication: 'cockroachdb'
+    server_name_indication: :disable  # Changed from "cockroachdb" to :disable
   ],
   pool_size: 10,
   show_sensitive_data_on_connection_error: true,

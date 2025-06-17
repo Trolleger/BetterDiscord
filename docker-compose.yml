@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   cockroachdb:
     image: cockroachdb/cockroach:v24.3.14
@@ -43,7 +41,6 @@ services:
     networks:
       - betterdiscord
     restart: "no"
-
 
   backend:
     container_name: backend
@@ -100,7 +97,7 @@ services:
       - MEDIASOUP_ANNOUNCED_IP=host.docker.internal
       - NODE_ENV=development
     ports:
-      - "127.0.0.1:3100:3000/tcp"       # Host port 3100 mapped to container 3000
+      - "127.0.0.1:3100:3000/tcp"
       - "127.0.0.1:40000-40100:40000-40100/udp"
     volumes:
       - ./mediasoup-server:/app
@@ -158,10 +155,3 @@ volumes:
 networks:
   betterdiscord:
     driver: bridge
-
-# ************************************************************
-# ** DO NOT MODIFY THE CockroachDB SERVICE BELOW **
-# ** Any change to advertise-addr, listen-addr, ports WILL  **
-# ** break CockroachDB startup. This is the exact setup    **
-# ** proven to work with v24.3.14 and secure certs.        **
-# ************************************************************
