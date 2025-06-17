@@ -3,7 +3,13 @@ defmodule ChatAppWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug CORSPlug, origin: ["http://localhost", "http://localhost:80"]
+    plug CORSPlug, origin: [
+      "http://localhost",
+      "http://localhost:80",
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1"
+    ]
   end
 
   pipeline :auth do
@@ -27,6 +33,8 @@ defmodule ChatAppWeb.Router do
   scope "/api", ChatAppWeb do
     pipe_through :api
     get "/status", StatusController, :status
-    # Add your routes here
+
+    # Here is the users resource with no new/edit routes (API only)
+    resources "/users", UserController, except: [:new, :edit]
   end
 end
