@@ -9,6 +9,7 @@ services:
       - --certs-dir=/cockroach/certs
       - --advertise-addr=cockroachdb:26257
       - --http-addr=0.0.0.0:8080
+      - --max-offset=5s
     environment:
       - TZ=UTC
     volumes:
@@ -39,20 +40,30 @@ services:
       - bash
       - -c
       - |
+        echo "Starting database initialization..."
         for i in {1..30}; do
-          if ./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 -e "SELECT 1;" &>/dev/null; then
-            ./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 -e "
+          echo "Attempt $i: Testing connection to CockroachDB..."
+          if ./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 --user=root -e "SELECT 1;" &>/dev/null; then
+            echo "Connection successful! Creating database and users..."
+            ./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 --user=root -e "
               CREATE DATABASE IF NOT EXISTS chat_app_dev;
-              CREATE USER IF NOT EXISTS root;
               CREATE USER IF NOT EXISTS craig WITH PASSWORD 'cockroach12938';
-              GRANT ALL ON DATABASE chat_app_dev TO root;
               GRANT ALL ON DATABASE chat_app_dev TO craig;
               GRANT ADMIN TO craig;
             "
-            exit 0
+            if [ $? -eq 0 ]; then
+              echo "Database initialization completed successfully!"
+              exit 0
+            else
+              echo "Failed to execute SQL commands"
+              exit 1
+            fi
+          else
+            echo "Connection failed, retrying in 2 seconds..."
+            sleep 2
           fi
-          sleep 2
         done
+        echo "Failed to connect to CockroachDB after 30 attempts"
         exit 1
     volumes:
       - ./certs:/cockroach/certs:ro
@@ -88,6 +99,7 @@ services:
       db-init:
         condition: service_completed_successfully
     restart: unless-stopped
+
   betterdiscord-coturn:
     container_name: betterdiscord-coturn
     image: instrumentisto/coturn:4.5.2
@@ -125,7 +137,6 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
-
 
   minio:
     container_name: minio
