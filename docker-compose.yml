@@ -7,16 +7,16 @@ services:
     command:
       - start-single-node
       - --certs-dir=/cockroach/certs
-      - --advertise-addr=cockroachdb:26257       # internal Docker alias + port
-      - --http-addr=0.0.0.0:8080                  # admin UI on all interfaces
+      - --advertise-addr=cockroachdb:26257
+      - --http-addr=0.0.0.0:8080
     environment:
       - TZ=UTC
     volumes:
       - ./certs:/cockroach/certs:ro
       - cockroach-data:/cockroach/cockroach-data
     ports:
-      - "26257:26257"  # SQL port: host → container (must match advertise-addr port)
-      - "8080:8080"    # Admin UI port
+      - "26257:26257"
+      - "8080:8080"
     networks:
       betterdiscord:
         aliases:
@@ -39,7 +39,6 @@ services:
       - bash
       - -c
       - |
-        # Wait for CockroachDB to be ready, then initialize
         for i in {1..30}; do
           if ./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 -e "SELECT 1;" &>/dev/null; then
             ./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 -e "
@@ -72,8 +71,6 @@ services:
     environment:
       MIX_ENV: "dev"
       PHX_HOST: "0.0.0.0"
-      # Inside Docker network, use port 26257
-      DATABASE_URL: "postgresql://root@cockroachdb:26257/chat_app_dev?sslmode=verify-full&sslcert=/certs/client.root.crt&sslkey=/certs/client.root.key&sslrootcert=/certs/ca.crt"
       GOOGLE_CLIENT_ID: "58516048770-lqsao96iscal7fb850pgmre3cmhpvm6q.apps.googleusercontent.com"
       GOOGLE_CLIENT_SECRET: "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"
     ports:
@@ -91,7 +88,6 @@ services:
       db-init:
         condition: service_completed_successfully
     restart: unless-stopped
-
   betterdiscord-coturn:
     container_name: betterdiscord-coturn
     image: instrumentisto/coturn:4.5.2
@@ -118,7 +114,7 @@ services:
       - MEDIASOUP_ANNOUNCED_IP=host.docker.internal
       - NODE_ENV=development
     ports:
-      - "127.0.0.1:3000:3000/tcp"
+      - "127.0.0.1:3100:3000/tcp"       # Host port 3100 mapped to container 3000
       - "127.0.0.1:40000-40100:40000-40100/udp"
     volumes:
       - ./mediasoup-server:/app
@@ -129,6 +125,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
+
 
   minio:
     container_name: minio
@@ -155,7 +152,7 @@ services:
     environment:
       - VITE_MEDIASOUP_WS_URL=ws://host.docker.internal:3000
     ports:
-      - "127.0.0.1:3001:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules

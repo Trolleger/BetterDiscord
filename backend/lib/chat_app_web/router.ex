@@ -10,23 +10,23 @@ defmodule ChatAppWeb.Router do
     plug Ueberauth
   end
 
-  # Health check/status endpoint
+  # Health check
   scope "/", ChatAppWeb do
     pipe_through :api
     get "/", StatusController, :status
   end
 
-  # OAuth Routes - match Google Console settings
+  # OAuth (Google etc.)
   scope "/", ChatAppWeb do
     pipe_through [:api, :auth]
     get "/auth/:provider", AuthController, :request
     get "/auth/:provider/callback", AuthController, :callback
   end
 
-  # API Routes
+  # Main API
   scope "/api", ChatAppWeb do
     pipe_through :api
     get "/status", StatusController, :status
-    # Add other API endpoints here
+    # Add your routes here
   end
 end
