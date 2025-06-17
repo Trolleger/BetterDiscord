@@ -36,40 +36,14 @@ services:
     depends_on:
       cockroachdb:
         condition: service_healthy
-    command:
-      - bash
-      - -c
-      - |
-        echo "Starting database initialization..."
-        for i in {1..30}; do
-          echo "Attempt $i: Testing connection to CockroachDB..."
-          if ./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 --user=root -e "SELECT 1;" &>/dev/null; then
-            echo "Connection successful! Creating database and users..."
-            ./cockroach sql --certs-dir=/cockroach/certs --host=cockroachdb:26257 --user=root -e "
-              CREATE DATABASE IF NOT EXISTS chat_app_dev;
-              CREATE USER IF NOT EXISTS craig WITH PASSWORD 'cockroach12938';
-              GRANT ALL ON DATABASE chat_app_dev TO craig;
-              GRANT ADMIN TO craig;
-            "
-            if [ $? -eq 0 ]; then
-              echo "Database initialization completed successfully!"
-              exit 0
-            else
-              echo "Failed to execute SQL commands"
-              exit 1
-            fi
-          else
-            echo "Connection failed, retrying in 2 seconds..."
-            sleep 2
-          fi
-        done
-        echo "Failed to connect to CockroachDB after 30 attempts"
-        exit 1
+    command: ["sql", "--certs-dir=/cockroach/certs", "--host=cockroachdb:26257", "--user=root", "-f", "/init.sql"]
     volumes:
       - ./certs:/cockroach/certs:ro
+      - ./init.sql:/init.sql:ro
     networks:
       - betterdiscord
     restart: "no"
+
 
   backend:
     container_name: backend
