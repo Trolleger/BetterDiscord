@@ -45,7 +45,8 @@ defmodule ChatApp.MixProject do
       {:phoenix_live_reload, "~> 1.4", only: :dev},
       {:ueberauth, "~> 0.10"},
       {:guardian, "~> 2.0"},
-      {:ueberauth_google, "~> 0.12"}
+      {:ueberauth_google, "~> 0.12"},
+      {:bcrypt_elixir, "~> 2.0"},
     ]
   end
 
