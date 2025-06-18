@@ -1,4 +1,4 @@
-defmodule AuthTutorialPhoenix.Accounts.User do
+defmodule ChatApp.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 

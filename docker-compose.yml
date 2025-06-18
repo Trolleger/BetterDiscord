@@ -1,4 +1,16 @@
+version: "3.9"
+
 services:
+
+  cockroach-init:
+    image: alpine:latest
+    container_name: cockroach-init
+    volumes:
+      - ./certs:/certs
+    command: >
+      sh -c "chmod 600 /certs/*.key && chmod 644 /certs/*.crt"
+    restart: "no"
+
   cockroachdb:
     image: cockroachdb/cockroach:v24.3.14
     container_name: cockroachdb
@@ -8,6 +20,9 @@ services:
       - --advertise-addr=cockroachdb:26257
       - --http-addr=0.0.0.0:8080
       - --max-offset=5s
+    depends_on:
+      cockroach-init:
+        condition: service_completed_successfully
     environment:
       - TZ=UTC
     volumes:
