@@ -47,3 +47,11 @@ config :ueberauth, Ueberauth.Strategy.Google.OAuth,
 
 # Import environment specific config
 import_config "#{config_env()}.exs"
+
+config :chat_app, ChatApp.Guardian,
+  issuer: "chat_app",
+  # The issuer is whatever we define here Then when you call Guardian functions like encode_and_sign, it automatically uses that issuer from config.
+  # The issuer (iss claim) is just a string label inside your JWT token that says who issued the token — basically, the "authority" or "issuer name" of the token.
+  #It’s like a signature stamp that tells anyone verifying the token:
+  #"This token was created by this app or service."
+  secret_key: "Skiieibidi1408"

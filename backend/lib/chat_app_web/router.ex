@@ -1,6 +1,7 @@
 defmodule ChatAppWeb.Router do
   use ChatAppWeb, :router
 
+  # General API pipeline: accepts JSON, handles CORS
   pipeline :api do
     plug(:accepts, ["json"])
 
@@ -15,36 +16,59 @@ defmodule ChatAppWeb.Router do
     )
   end
 
-  pipeline :auth do
+  # OAuth pipeline (for Google login etc.)
+  pipeline :oauth do
     plug(Ueberauth)
   end
 
-  # Health check
+  # Guardian JWT auth pipeline for protected routes
+  pipeline :auth do
+    plug(ChatApp.Guardian.AuthPipeline)
+    # This custom pipeline runs all plugs defined in AuthPipeline (like verifying JWT tokens).
+    # We’ll use it for routes that require authentication.
+  end
+
+  # Health check route, root-level — used to check if the server is alive
   scope "/", ChatAppWeb do
     pipe_through(:api)
     get("/", StatusController, :status)
   end
 
-  # OAuth (Google etc.)
+  # OAuth (Google or other providers) routes
   scope "/", ChatAppWeb do
-    pipe_through([:api, :auth])
+    pipe_through([:api, :oauth])
     get("/auth/:provider", AuthController, :request)
     get("/auth/:provider/callback", AuthController, :callback)
   end
 
-  # Manual Signup stuff
+  # Public API routes — user registration and login
   scope "/api", ChatAppWeb do
-    # Use the :api pipeline, which handles JSON requests and CORS
     pipe_through(:api)
+    # These routes are public and do NOT require authentication.
+    # Only go through the basic :api pipeline (CORS + JSON parsing).
 
-    # Custom route for user registration (e.g., manual signup)
     post("/users", UserController, :register)
-    # What happens is that each time someone requests, first of all then the localhost, then the port, then the /api/users and then
-    # this calls within the usercontroller the register function and basically create a user
-    # and if we go in the rest client we will see this is working
+    # POST /api/users → handles manual user registration.
 
-    # Health check endpoint to get status info
+    post("/session/new", SessionController, :new)
+    # POST /api/session/new → handles login and returns access/refresh token.
+
     get("/status", StatusController, :status)
+    # GET /api/status → a health check endpoint, returns basic server info.
+  end
 
+  # Protected API routes — require valid JWT access token
+  scope "/api", ChatAppWeb do
+    pipe_through([:api, :auth])
+    # These routes require both the :api and :auth pipelines.
+    # That means CORS + JSON + token verification via Guardian.
+
+    post("/session/refresh", SessionController, :refresh)
+    # POST /api/session/refresh → exchanges refresh token for a new access token.
+
+    post("/session/delete", SessionController, :delete)
+    # POST /api/session/delete → logs out user by clearing the cookie.
+    # This uses POST (not DELETE) to match the tutorial — valid, just not RESTful.
+    # You can later add a proper DELETE route too, but this works fine for now.
   end
 end

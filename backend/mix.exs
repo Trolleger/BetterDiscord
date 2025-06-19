@@ -45,6 +45,8 @@ defmodule ChatApp.MixProject do
       {:phoenix_live_reload, "~> 1.4", only: :dev},
       {:ueberauth, "~> 0.10"},
       {:guardian, "~> 2.0"},
+      {:guardian_db, "~> 3.0"},
+      # TODO: Later on add all the guardian_db functionality, for now we will just be using plain simple guardian
       {:ueberauth_google, "~> 0.12"},
       {:bcrypt_elixir, "~> 2.0"},
     ]
