@@ -1,20 +1,11 @@
 defmodule ChatAppWeb do
   @moduledoc """
   The entrypoint for defining your web interface, such
-  as controllers, components, channels, and so on.
+  as controllers, views, channels, and so on.
 
-  This can be used in your application as:
-
+  Usage:
       use ChatAppWeb, :controller
-      use ChatAppWeb, :html
-
-  The definitions below will be executed for every controller,
-  component, etc, so keep them short and clean, focused
-  on imports, uses and aliases.
-
-  Do NOT define functions inside the quoted expressions
-  below. Instead, define additional modules and import
-  those modules here.
+      use ChatAppWeb, :view
   """
 
   def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
@@ -23,7 +14,6 @@ defmodule ChatAppWeb do
     quote do
       use Phoenix.Router, helpers: false
 
-      # Import common connection and controller functions to use in pipelines
       import Plug.Conn
       import Phoenix.Controller
     end
@@ -49,6 +39,22 @@ defmodule ChatAppWeb do
     end
   end
 
+  def view do
+    quote do
+      use Phoenix.View,
+        root: "lib/chat_app_web/templates",
+        namespace: ChatAppWeb
+
+      import Phoenix.Controller,
+        only: [get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
+
+      # Basic imports and aliases for views
+      import Phoenix.View
+
+      use Phoenix.HTML
+    end
+  end
+
   def verified_routes do
     quote do
       use Phoenix.VerifiedRoutes,
@@ -58,9 +64,6 @@ defmodule ChatAppWeb do
     end
   end
 
-  @doc """
-  When used, dispatch to the appropriate controller/live_view/etc.
-  """
   defmacro __using__(which) when is_atom(which) do
     apply(__MODULE__, which, [])
   end
