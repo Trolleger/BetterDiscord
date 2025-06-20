@@ -1,21 +1,14 @@
 defmodule ChatAppWeb do
   @moduledoc """
-  The entrypoint for defining your web interface, such
-  as controllers, views, channels, and so on.
-
-  Usage:
-      use ChatAppWeb, :controller
-      use ChatAppWeb, :view
+  Entrypoint for your API-only backend. No HTML/template support.
   """
-
-  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
 
   def router do
     quote do
       use Phoenix.Router, helpers: false
-
       import Plug.Conn
       import Phoenix.Controller
+      unquote(verified_routes())
     end
   end
 
@@ -28,30 +21,21 @@ defmodule ChatAppWeb do
   def controller do
     quote do
       use Phoenix.Controller,
-        formats: [:html, :json],
-        layouts: [html: ChatAppWeb.Layouts]
-
-      use Gettext, backend: ChatAppWeb.Gettext
+        formats: [:json],
+        layouts: false
 
       import Plug.Conn
-
+      import ChatAppWeb.Gettext
       unquote(verified_routes())
     end
   end
 
-  def view do
+  def json do
     quote do
-      use Phoenix.View,
-        root: "lib/chat_app_web/templates",
-        namespace: ChatAppWeb
-
-      import Phoenix.Controller,
-        only: [get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
-
-      # Basic imports and aliases for views
-      import Phoenix.View
-
-      use Phoenix.HTML
+      import Plug.Conn
+      import Phoenix.Controller, only: [render: 2, render: 3]
+      import ChatAppWeb.Gettext
+      alias ChatAppWeb.Router.Helpers, as: Routes
     end
   end
 
@@ -60,7 +44,7 @@ defmodule ChatAppWeb do
       use Phoenix.VerifiedRoutes,
         endpoint: ChatAppWeb.Endpoint,
         router: ChatAppWeb.Router,
-        statics: ChatAppWeb.static_paths()
+        statics: []
     end
   end
 
