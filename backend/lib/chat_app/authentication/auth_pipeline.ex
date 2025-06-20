@@ -16,7 +16,7 @@ defmodule ChatApp.Guardian.AuthPipeline do
   # So we add within this file that we are going to use the ChatApp.Guardian.AuthPipeline inside of this module and then we set the otp_app as our application
   # then we add the module which is ChatApp.Guardian (which we will create)
   # Then we add the error_handler: ChatApp.Guardian.AuthErrorHandler as the error handler
-  plug(Guardian.Plug.VerifyHeader, claims: @claims, realm: "Bearer")
+  plug(Guardian.Plug.VerifyHeader, claims: @claims, scheme: "Bearer")
   # So we add these 3 different plugs. 1. That verifies the header with the claims and in the realm of bearer (we have to pass to the header a authorization that has bearer then a space then the json token)
   plug(Guardian.Plug.EnsureAuthenticated)
   # Then we make sure this is authenticated

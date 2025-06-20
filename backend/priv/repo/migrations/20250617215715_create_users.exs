@@ -14,7 +14,7 @@ defmodule ChatApp.Repo.Migrations.CreateUsers do
       add :first_name, :string, null: false     # User's first name, required field
       add :last_name, :string, null: false      # User's last name, required field
       add :email, :string, null: false          # User's email, required and unique
-      add :password, :string, null: false       # Hashed password, required field
+      add :hashed_password, :string, null: false       # Hashed password, required field
 
       # Add timestamp columns for record creation and updates.
       # CockroachDB’s Ecto adapter uses "created_at" instead of the default "inserted_at" for the insert timestamp.

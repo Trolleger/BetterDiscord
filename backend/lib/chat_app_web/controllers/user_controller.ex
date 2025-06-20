@@ -18,4 +18,3 @@ defmodule ChatAppWeb.UserController do
   end
 end
 end
-# DONT WORRY ABOUT MISSING ERRORS OR SHIT LIKE THIS OR THAT WE WILL BE FIXING IT LATER

@@ -1,6 +1,6 @@
 defmodule ChatAppWeb do
   @moduledoc """
-  Entrypoint for your API-only backend. No HTML/template support.
+  Entrypoint for your API‑only backend. No HTML, no layouts.
   """
 
   def router do
@@ -20,9 +20,9 @@ defmodule ChatAppWeb do
 
   def controller do
     quote do
+      # JSON only, no layouts clause
       use Phoenix.Controller,
-        formats: [:json],
-        layouts: false
+        formats: [:json]
 
       import Plug.Conn
       import ChatAppWeb.Gettext
@@ -48,6 +48,7 @@ defmodule ChatAppWeb do
     end
   end
 
+  @doc false
   defmacro __using__(which) when is_atom(which) do
     apply(__MODULE__, which, [])
   end

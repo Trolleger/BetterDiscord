@@ -1,4 +1,11 @@
 defmodule ChatApp.Accounts.User do
+  @moduledoc """
+  The Ecto schema for users.
+
+  - `:password` is a virtual field used only for input.
+  - `:hashed_password` is what’s stored in the database.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -8,19 +15,38 @@ defmodule ChatApp.Accounts.User do
     field :email, :string
     field :first_name, :string
     field :last_name, :string
-    field :password, :string
-    timestamps(inserted_at: :created_at, updated_at: :updated_at, type: :utc_datetime)
+
+    # Virtual field for accepting raw password in JSON input; not persisted
+    field :password, :string, virtual: true
+
+    # Actual database column for the password hash
+    field :hashed_password, :string
+
+    timestamps(
+      inserted_at: :created_at,
+      updated_at: :updated_at,
+      type: :utc_datetime
+    )
   end
 
-  @doc false
+  @doc """
+  A generic changeset for updating user fields.
+  Does *not* touch password hashing.
+  """
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:first_name, :last_name, :email, :password])
-    |> validate_required([:first_name, :last_name, :email, :password])
+    |> cast(attrs, [:first_name, :last_name, :email])
+    |> validate_required([:first_name, :last_name, :email])
     |> unique_constraint(:email)
   end
 
-  # Registration changeset is specifically the stuff you want to do when registering, the normal changeset is for later other stuff
+  @doc """
+  A registration changeset that:
+  - casts raw `:password`,
+  - validates presence,
+  - enforces unique email,
+  - hashes the password into `:hashed_password`
+  """
   def registration_changeset(user, attrs) do
     user
     |> cast(attrs, [:first_name, :last_name, :email, :password])
@@ -29,14 +55,17 @@ defmodule ChatApp.Accounts.User do
     |> encrypt_and_put_password()
   end
 
-  defp encrypt_and_put_password(user) do
-    with password <- fetch_field!(user, :password) do
-      # Basically says with the password, fetch the field and do something in there
-      encrypted_password = Bcrypt.hash_pwd_salt(password, log_rounds: 12)
-      put_change(user, :password, encrypted_password)
-      # Explained:
-      # bcrypt with 12 rounds — balanced for security and performance.
-      # Then put the encrypted password back into the changeset.
+  @doc false
+  # Takes the virtual `:password`, hashes it, and puts in `:hashed_password`
+  defp encrypt_and_put_password(changeset) do
+    password = get_change(changeset, :password)
+
+    # If password was provided, hash and store it
+    if password do
+      hashed = Bcrypt.hash_pwd_salt(password, log_rounds: 12)
+      put_change(changeset, :hashed_password, hashed)
+    else
+      changeset
     end
   end
 end
