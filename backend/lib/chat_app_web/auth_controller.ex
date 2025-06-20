@@ -18,12 +18,12 @@ defmodule ChatAppWeb.AuthController do
     # Redirect back to frontend with success
     conn
     |> put_session(:current_user, user_info)
-    |> redirect(external: "http://localhost:3001/?auth=success&user=#{URI.encode(Jason.encode!(user_info))}")
+    |> redirect(external: "http://localhost:3000/?auth=success&user=#{URI.encode(Jason.encode!(user_info))}")
   end
 
   def callback(%{assigns: %{ueberauth_failure: _fails}} = conn, _params) do
     conn
-    |> redirect(external: "http://localhost:3001/?auth=error&message=Authentication failed")
+    |> redirect(external: "http://localhost:3000/?auth=error&message=Authentication failed")
   end
 
   def logout(conn, _params) do

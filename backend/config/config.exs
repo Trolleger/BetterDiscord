@@ -1,17 +1,11 @@
-# This file is responsible for configuring your application
-# and its dependencies with the aid of the Config module.
-#
-# This configuration file is loaded before any dependency and
-# is restricted to this project.
-
-# General application configuration
 import Config
 
+# General application configuration
 config :chat_app,
   ecto_repos: [ChatApp.Repo],
   generators: [timestamp_type: :utc_datetime]
 
-# Configures the endpoint
+# Endpoint configuration (non-sensitive)
 config :chat_app, ChatAppWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
@@ -21,37 +15,23 @@ config :chat_app, ChatAppWeb.Endpoint,
   ],
   pubsub_server: ChatApp.PubSub
 
-# Configures the mailer
-config :chat_app, ChatApp.Mailer, adapter: Swoosh.Adapters.Local
-
-# Configures Elixir's Logger
+# Logger configuration
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
-# Use Jason for JSON parsing in Phoenix
+# JSON library
 config :phoenix, :json_library, Jason
 
-# === Ueberauth Google OAuth config ===
+# Ueberauth providers setup (without secrets)
 config :ueberauth, Ueberauth,
   providers: [
     google: {Ueberauth.Strategy.Google, [default_scope: "email profile"]}
   ]
 
-config :ueberauth, Ueberauth.Strategy.Google.OAuth,
-  client_id: System.get_env("GOOGLE_CLIENT_ID") || "58516048770-lqsao96iscal7fb850pgmre3cmhpvm6q.apps.googleusercontent.com",
-  client_secret: System.get_env("GOOGLE_CLIENT_SECRET") || "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",
-  redirect_uri: "http://localhost:4000/auth/google/callback"
-
-# === End Ueberauth config ===
-
-# Import environment specific config
-import_config "#{config_env()}.exs"
-
+# Guardian JWT configuration (non-secret parts)
 config :chat_app, ChatApp.Guardian,
-  issuer: "chat_app",
-  # The issuer is whatever we define here Then when you call Guardian functions like encode_and_sign, it automatically uses that issuer from config.
-  # The issuer (iss claim) is just a string label inside your JWT token that says who issued the token — basically, the "authority" or "issuer name" of the token.
-  #It’s like a signature stamp that tells anyone verifying the token:
-  #"This token was created by this app or service."
-  secret_key: "Skiieibidi1408"
+  issuer: "chat_app"
+
+# Import environment-specific config (dev.exs, prod.exs, etc.)
+import_config "#{config_env()}.exs"
