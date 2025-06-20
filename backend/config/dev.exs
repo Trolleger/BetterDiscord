@@ -11,7 +11,7 @@ config :chat_app, ChatApp.Repo,
     certfile: "/certs/client.root.crt",
     keyfile: "/certs/client.root.key",
     verify: :verify_peer,
-    server_name_indication: :disable  # Changed from "cockroachdb" to :disable
+    server_name_indication: :disable
   ],
   pool_size: 10,
   show_sensitive_data_on_connection_error: true,
@@ -30,6 +30,10 @@ config :chat_app, ChatAppWeb.Endpoint,
   debug_errors: true,
   secret_key_base: System.get_env("SECRET_KEY_BASE") || "default_dummy_key",
   watchers: []
+
+config :chat_app, ChatApp.Guardian,
+  issuer: "chat_app",
+  secret_key: System.get_env("GUARDIAN_SECRET_KEY") || "default_guardian_secret"
 
 config :cors_plug,
   origin: [

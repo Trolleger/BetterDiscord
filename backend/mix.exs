@@ -40,6 +40,7 @@ defmodule ChatApp.MixProject do
       {:websockex, "~> 0.4.3"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
+      {:dotenv, "~> 3.0"},
       {:bandit, "~> 1.5"},
       {:cors_plug, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.4", only: :dev},
@@ -47,6 +48,9 @@ defmodule ChatApp.MixProject do
       {:guardian, "~> 2.0"},
       {:guardian_db, "~> 3.0"},
       # TODO: Later on add all the guardian_db functionality, for now we will just be using plain simple guardian
+      # TODO: Implement logout by clearing refresh token cookie and making sure frontend clears auth state
+      # TODO: Actually fucking implement the frontend logging in and shit
+      # TODO: yeah quite a few todo's also make sure stuff works with OAUTH, get TODO tree, very effective
       {:ueberauth_google, "~> 0.12"},
       {:bcrypt_elixir, "~> 2.0"},
     ]
