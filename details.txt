@@ -6,6 +6,9 @@ docker exec -it cockroachdb ./cockroach sql --certs-dir=/cockroach/certs --user=
 FOR NORMAL DOCKER-COMPOSE-DEV.yml On POWERSHELL
 docker-compose down; docker-compose up -d
 
+# DROP DATABASE AND REMAKE. WARNING! WILL DROP ALL INFO!
+docker exec -it backend mix ecto.drop; docker exec -it backend mix ecto.create; docker exec -it backend mix ecto.migrate
+
 FOR DEV!
 docker-compose -f docker-compose-dev.yml up -d --build
 

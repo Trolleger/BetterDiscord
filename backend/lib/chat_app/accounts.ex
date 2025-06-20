@@ -1,8 +1,10 @@
+# lib/chat_app/accounts.ex
 defmodule ChatApp.Accounts do
   @moduledoc """
   The Accounts context.
 
   Provides user creation, lookup, and authentication functions.
+  Also handles OAuth user retrieval/creation.
   """
 
   import Ecto.Query, warn: false
@@ -70,5 +72,27 @@ defmodule ChatApp.Accounts do
   # Uses Bcrypt to compare raw password with stored hash
   defp validate_password(password, hashed_password) do
     Bcrypt.verify_pass(password, hashed_password)
+  end
+
+  @doc """
+  Finds or creates a user from OAuth data.
+  - Checks by provider+provider_uid first.
+  - Falls back to email match for linking accounts.
+  - Creates new user with `oauth_changeset/2` if none found.
+  """
+  def get_or_create_oauth_user(%{email: email, provider: provider, provider_uid: provider_uid} = attrs) do
+    user =
+      Repo.get_by(User, provider: provider, provider_uid: provider_uid) ||
+      Repo.get_by(User, email: email)
+
+    case user do
+      nil ->
+        %User{}
+        |> User.oauth_changeset(attrs)
+        |> Repo.insert()
+
+      user ->
+        {:ok, user}
+    end
   end
 end

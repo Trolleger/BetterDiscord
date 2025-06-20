@@ -4,6 +4,7 @@ defmodule ChatApp.Accounts.User do
 
   - `:password` is a virtual field used only for input.
   - `:hashed_password` is what’s stored in the database.
+  - `:provider` and `:provider_uid` track OAuth users.
   """
 
   use Ecto.Schema
@@ -19,8 +20,12 @@ defmodule ChatApp.Accounts.User do
     # Virtual field for accepting raw password in JSON input; not persisted
     field :password, :string, virtual: true
 
-    # Actual database column for the password hash
+    # Actual database column for the password hash (nullable for OAuth-only users)
     field :hashed_password, :string
+
+    # OAuth support fields
+    field :provider, :string       # e.g., "google"
+    field :provider_uid, :string   # e.g., Google’s unique user ID
 
     timestamps(
       inserted_at: :created_at,
@@ -31,28 +36,45 @@ defmodule ChatApp.Accounts.User do
 
   @doc """
   A generic changeset for updating user fields.
-  Does *not* touch password hashing.
+  Does *not* touch password hashing or OAuth fields.
+  First and last names are optional here.
   """
   def changeset(user, attrs) do
     user
     |> cast(attrs, [:first_name, :last_name, :email])
-    |> validate_required([:first_name, :last_name, :email])
+    |> validate_required([:email])  # only email required
     |> unique_constraint(:email)
   end
 
   @doc """
   A registration changeset that:
   - casts raw `:password`,
-  - validates presence,
+  - validates presence of email and password,
   - enforces unique email,
   - hashes the password into `:hashed_password`
+
+  First and last names are optional for registration.
   """
   def registration_changeset(user, attrs) do
     user
     |> cast(attrs, [:first_name, :last_name, :email, :password])
-    |> validate_required([:first_name, :last_name, :email, :password])
+    |> validate_required([:email, :password])  # require email and password only
     |> unique_constraint(:email)
     |> encrypt_and_put_password()
+  end
+
+  @doc """
+  A changeset for OAuth users that:
+  - casts `:first_name`, `:last_name`, `:email`, `:provider`, `:provider_uid`
+  - validates presence of email, provider, provider_uid
+  - enforces unique constraints on email and provider_uid
+  """
+  def oauth_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:first_name, :last_name, :email, :provider, :provider_uid])
+    |> validate_required([:email, :provider, :provider_uid])
+    |> unique_constraint(:email)
+    |> unique_constraint(:provider_uid)
   end
 
   @doc false
@@ -60,7 +82,7 @@ defmodule ChatApp.Accounts.User do
   defp encrypt_and_put_password(changeset) do
     password = get_change(changeset, :password)
 
-    # If password was provided, hash and store it
+    # If a password was provided, hash it with Bcrypt
     if password do
       hashed = Bcrypt.hash_pwd_salt(password, log_rounds: 12)
       put_change(changeset, :hashed_password, hashed)

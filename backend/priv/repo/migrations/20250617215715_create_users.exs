@@ -1,3 +1,4 @@
+# priv/repo/migrations/*_create_users.exs
 defmodule ChatApp.Repo.Migrations.CreateUsers do
   use Ecto.Migration
 
@@ -11,10 +12,17 @@ defmodule ChatApp.Repo.Migrations.CreateUsers do
       add :id, :uuid, primary_key: true, default: fragment("gen_random_uuid()")
 
       # Add required user fields with NOT NULL constraints.
-      add :first_name, :string, null: false     # User's first name, required field
-      add :last_name, :string, null: false      # User's last name, required field
+      add :first_name, :string, null: true     # User's first name, non-required field, they can add it if they want, just optional, like last name yaknow?
+      add :last_name, :string, null: true       # Make last_name nullable to allow OAuth-only users
       add :email, :string, null: false          # User's email, required and unique
-      add :hashed_password, :string, null: false       # Hashed password, required field
+
+      # Hashed password column.
+      # We make this nullable so OAuth-only users can exist without a password initially.
+      add :hashed_password, :string, null: true
+
+      # New fields for OAuth support:
+      add :provider, :string, null: true       # OAuth provider name (e.g., "google")
+      add :provider_uid, :string, null: true   # Unique ID from OAuth provider
 
       # Add timestamp columns for record creation and updates.
       # CockroachDB’s Ecto adapter uses "created_at" instead of the default "inserted_at" for the insert timestamp.
@@ -26,5 +34,8 @@ defmodule ChatApp.Repo.Migrations.CreateUsers do
     # Create a unique index on the email column to enforce uniqueness at the database level,
     # preventing duplicate email addresses from being inserted.
     create unique_index(:users, [:email])
+    # TODO: Add it so oauth users can change their passwords
+    # Ensure a given provider+provider_uid combo only appears once
+    create unique_index(:users, [:provider, :provider_uid])
   end
 end

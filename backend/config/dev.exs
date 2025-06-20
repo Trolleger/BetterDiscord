@@ -12,6 +12,9 @@ config :phoenix, :stacktrace_depth, 20
 config :chat_app, dev_routes: true
 config :swoosh, :api_client, false
 
+config :chat_app, ChatApp.Repo,
+  migration_lock: false
+
 # CORS for development
 config :cors_plug,
   origin: [
