@@ -1,4 +1,4 @@
-defmodule ChatAppWeb.UserController do
+defmodule ChatAppWeb.Users.UserController do
   use ChatAppWeb, :controller
 
   alias ChatApp.Accounts

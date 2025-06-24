@@ -1,4 +1,3 @@
-# priv/repo/migrations/*_create_users.exs
 defmodule ChatApp.Repo.Migrations.CreateUsers do
   use Ecto.Migration
 
@@ -15,6 +14,9 @@ defmodule ChatApp.Repo.Migrations.CreateUsers do
       add :first_name, :string, null: true     # User's first name, non-required field, they can add it if they want, just optional, like last name yaknow?
       add :last_name, :string, null: true       # Make last_name nullable to allow OAuth-only users
       add :email, :string, null: false          # User's email, required and unique
+
+      # Add username field, required and unique
+      add :username, :string, null: false       # User's username, required and unique
 
       # Hashed password column.
       # We make this nullable so OAuth-only users can exist without a password initially.
@@ -34,6 +36,10 @@ defmodule ChatApp.Repo.Migrations.CreateUsers do
     # Create a unique index on the email column to enforce uniqueness at the database level,
     # preventing duplicate email addresses from being inserted.
     create unique_index(:users, [:email])
+
+    # Create unique index on username to prevent duplicates
+    create unique_index(:users, [:username])
+
     # TODO: Add it so oauth users can change their passwords
     # Ensure a given provider+provider_uid combo only appears once
     create unique_index(:users, [:provider, :provider_uid])

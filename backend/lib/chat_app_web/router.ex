@@ -47,14 +47,16 @@ defmodule ChatAppWeb.Router do
     # These routes are public and do NOT require authentication.
     # Only go through the basic :api pipeline (CORS + JSON parsing).
 
-    post("/users", UserController, :register)
+    post("/users", Users.UserController, :register)
     # POST /api/users → handles manual user registration.
 
-    post("/session/new", SessionController, :new)
+    post("/session/new", Auth.SessionController, :new)
     # POST /api/session/new → handles login and returns access/refresh token.
 
     get("/status", StatusController, :status)
     # GET /api/status → a health check endpoint, returns basic server info.
+
+
   end
 
   # Protected API routes — require valid JWT access token
@@ -70,5 +72,8 @@ defmodule ChatAppWeb.Router do
     # POST /api/session/delete → logs out user by clearing the cookie.
     # This uses POST (not DELETE) to match the tutorial — valid, just not RESTful.
     # You can later add a proper DELETE route too, but this works fine for now.
+
+    get "/profile", Users.ProfileController, :show
+    # Goes to the USER's JWT token and then get's the responding information
   end
 end

@@ -1,4 +1,4 @@
-defmodule ChatAppWeb.SessionController do
+defmodule ChatAppWeb.Auth.SessionController do
   # just like with view we want to add the look below
   use ChatAppWeb, :controller
 

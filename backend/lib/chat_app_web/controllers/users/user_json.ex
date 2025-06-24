@@ -1,4 +1,4 @@
-defmodule ChatAppWeb.UserJSON do
+defmodule ChatAppWeb.Users.UserJSON do
   alias ChatApp.Accounts.User
 
   @doc """
