@@ -29,9 +29,10 @@ defmodule ChatApp.Accounts do
     query = from(u in User, where: u.email == ^email)
 
     case Repo.one(query) do
-      nil  ->
+      nil ->
         IO.inspect(email, label: "[AUTH] Email not found in DB")
         {:error, :not_found}
+
       user ->
         {:ok, user}
     end
@@ -80,10 +81,12 @@ defmodule ChatApp.Accounts do
   - Falls back to email match for linking accounts.
   - Creates new user with `oauth_changeset/2` if none found.
   """
-  def get_or_create_oauth_user(%{email: email, provider: provider, provider_uid: provider_uid} = attrs) do
+  def get_or_create_oauth_user(
+        %{email: email, provider: provider, provider_uid: provider_uid} = attrs
+      ) do
     user =
       Repo.get_by(User, provider: provider, provider_uid: provider_uid) ||
-      Repo.get_by(User, email: email)
+        Repo.get_by(User, email: email)
 
     case user do
       nil ->
