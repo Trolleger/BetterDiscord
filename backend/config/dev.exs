@@ -14,15 +14,3 @@ config :swoosh, :api_client, false
 
 config :chat_app, ChatApp.Repo,
   migration_lock: false
-
-# CORS for development
-config :cors_plug,
-  origin: [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost",
-    "http://127.0.0.1"
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  headers: ["authorization", "content-type", "x-requested-with"],
-  credentials: true

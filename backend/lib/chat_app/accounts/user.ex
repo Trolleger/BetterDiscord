@@ -40,6 +40,7 @@ defmodule ChatApp.Accounts.User do
     |> validate_required([:email, :username])
     |> unique_constraint(:email)
     |> unique_constraint(:username)
+
   end
 
   @doc """
@@ -55,6 +56,9 @@ defmodule ChatApp.Accounts.User do
     |> unique_constraint(:email)
     |> unique_constraint(:username)
     |> encrypt_and_put_password()
+    |> validate_format(:email, ~r/^[^\s]+@[^\s]+\.[^\s]+$/, message: "must be a valid email")
+    |> validate_length(:password, min: 8, message: "Password Has To Be At Least 8 Characters")
+    |> validate_length(:username, max: 30, message: "Username Can Not Be Longer then 30 Characters")
   end
 
   @doc """

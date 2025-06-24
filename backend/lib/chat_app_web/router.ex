@@ -56,6 +56,8 @@ defmodule ChatAppWeb.Router do
     get("/status", StatusController, :status)
     # GET /api/status → a health check endpoint, returns basic server info.
 
+    get "/healthcheck", HealthcheckController, :index
+    # Just a quick healthcheck, less advanced then the status
 
   end
 
