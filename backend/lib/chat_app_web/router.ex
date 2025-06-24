@@ -65,10 +65,10 @@ defmodule ChatAppWeb.Router do
     # These routes require both the :api and :auth pipelines.
     # That means CORS + JSON + token verification via Guardian.
 
-    post("/session/refresh", SessionController, :refresh)
+    post("/session/refresh", Auth.SessionController, :refresh)
     # POST /api/session/refresh → exchanges refresh token for a new access token.
 
-    post("/session/delete", SessionController, :delete)
+    post("/session/delete", Auth.SessionController, :delete)
     # POST /api/session/delete → logs out user by clearing the cookie.
     # This uses POST (not DELETE) to match the tutorial — valid, just not RESTful.
     # You can later add a proper DELETE route too, but this works fine for now.

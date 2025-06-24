@@ -21,6 +21,7 @@ defmodule ChatAppWeb.Users.UserJSON do
       first_name: user.first_name,
       last_name: user.last_name,
       email: user.email,
+      username: user.username,  # Added username field
       password: user.password
     }
   end
