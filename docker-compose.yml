@@ -92,7 +92,7 @@ services:
     ports:
       - "127.0.0.1:3478:3478/tcp"
       - "127.0.0.1:3478:3478/udp"
-      - "127.0.0.1:60000-60200:60000-60200/udp"
+      - "127.0.0.1:55000-55200:55000-55200/udp"
     volumes:
       - ./backend/secrets/turnserver.conf:/etc/coturn/turnserver.conf:ro
     command: >

@@ -23,6 +23,7 @@
   "dependencies": {
     "@expo/webpack-config": "^19.0.1",
     "@vitejs/plugin-react": "^4.4.1",
+    "axios": "^1.10.0",
     "electron": "36.1.0",
     "expo": "^53.0.9",
     "expo-status-bar": "^2.2.3",
@@ -32,6 +33,7 @@
     "react-native": "^0.79.2",
     "react-native-web": "^0.20.0",
     "react-query": "^3.39.3",
+    "react-router-dom": "^7.6.2",
     "zustand": "^5.0.4"
   },
   "devDependencies": {
@@ -43,6 +45,7 @@
     "@craco/craco": "^7.1.0",
     "@types/react": "^19.1.4",
     "@types/react-dom": "^19.1.5",
+    "@types/react-router-dom": "^5.3.3",
     "cross-env": "^7.0.3",
     "esbuild": "0.25.4",
     "expo-cli": "^6.3.11",
