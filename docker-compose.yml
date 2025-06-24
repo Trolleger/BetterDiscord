@@ -64,12 +64,12 @@ services:
       args:
         - BUILDKIT_INLINE_CACHE=1
     env_file:
-      - ./env/.env
+      - ./env/.env   # <- add this line to load GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET from your env folder
+      - ./backend/.env # <- keep this if you still want other env vars from backend/.env
     environment:
       MIX_ENV: "dev"
       PHX_HOST: "0.0.0.0"
-      GOOGLE_CLIENT_ID: "58516048770-lqsao96iscal7fb850pgmre3cmhpvm6q.apps.googleusercontent.com"
-      GOOGLE_CLIENT_SECRET: "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"
+      # Remove hardcoded GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET from here!
     ports:
       - "127.0.0.1:4000:4000"
     volumes:
@@ -85,6 +85,7 @@ services:
       db-init:
         condition: service_completed_successfully
     restart: unless-stopped
+
 
   betterdiscord-coturn:
     container_name: betterdiscord-coturn

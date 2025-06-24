@@ -1,19 +1,10 @@
 defmodule ChatAppWeb.Router do
   use ChatAppWeb, :router
 
-  # General API pipeline: accepts JSON, handles CORS
+  # General API pipeline: accepts JSON
+  # CORS is handled in endpoint.ex, so we don't need CORSPlug here
   pipeline :api do
     plug(:accepts, ["json"])
-
-    plug(CORSPlug,
-      origin: [
-        "http://localhost",
-        "http://localhost:80",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1"
-      ]
-    )
   end
 
   # OAuth pipeline (for Google login etc.)
@@ -25,7 +16,7 @@ defmodule ChatAppWeb.Router do
   pipeline :auth do
     plug(ChatApp.Guardian.AuthPipeline)
     # This custom pipeline runs all plugs defined in AuthPipeline (like verifying JWT tokens).
-    # We’ll use it for routes that require authentication.
+    # We'll use it for routes that require authentication.
   end
 
   # Health check route, root-level — used to check if the server is alive
@@ -45,7 +36,7 @@ defmodule ChatAppWeb.Router do
   scope "/api", ChatAppWeb do
     pipe_through(:api)
     # These routes are public and do NOT require authentication.
-    # Only go through the basic :api pipeline (CORS + JSON parsing).
+    # Only go through the basic :api pipeline (JSON parsing).
 
     post("/users", Users.UserController, :register)
     # POST /api/users → handles manual user registration.
@@ -58,14 +49,13 @@ defmodule ChatAppWeb.Router do
 
     get "/healthcheck", HealthcheckController, :index
     # Just a quick healthcheck, less advanced then the status
-
   end
 
   # Protected API routes — require valid JWT access token
   scope "/api", ChatAppWeb do
     pipe_through([:api, :auth])
     # These routes require both the :api and :auth pipelines.
-    # That means CORS + JSON + token verification via Guardian.
+    # That means JSON + token verification via Guardian.
 
     post("/session/refresh", Auth.SessionController, :refresh)
     # POST /api/session/refresh → exchanges refresh token for a new access token.

@@ -1,12 +1,10 @@
 defmodule ChatApp.Accounts.User do
   @moduledoc """
   The Ecto schema for users.
-
   - `:password` is a virtual field used only for input.
-  - `:hashed_password` is what’s stored in the database.
+  - `:hashed_password` is what's stored in the database.
   - `:provider` and `:provider_uid` track OAuth users.
   """
-
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -14,13 +12,9 @@ defmodule ChatApp.Accounts.User do
 
   schema "users" do
     field :email, :string
-    field :username, :string    # NEW: Username field (required)
-    field :first_name, :string
-    field :last_name, :string
-
+    field :username, :string    # Username field (required)
     field :password, :string, virtual: true           # Raw password input
     field :hashed_password, :string                   # Stored encrypted password
-
     field :provider, :string       # OAuth provider (e.g., Google)
     field :provider_uid, :string   # OAuth UID
 
@@ -36,11 +30,10 @@ defmodule ChatApp.Accounts.User do
   """
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:first_name, :last_name, :email, :username])
+    |> cast(attrs, [:email, :username])
     |> validate_required([:email, :username])
     |> unique_constraint(:email)
     |> unique_constraint(:username)
-
   end
 
   @doc """
@@ -51,7 +44,7 @@ defmodule ChatApp.Accounts.User do
   """
   def registration_changeset(user, attrs) do
     user
-    |> cast(attrs, [:first_name, :last_name, :email, :username, :password])
+    |> cast(attrs, [:email, :username, :password])
     |> validate_required([:email, :username, :password])
     |> unique_constraint(:email)
     |> unique_constraint(:username)
@@ -67,7 +60,7 @@ defmodule ChatApp.Accounts.User do
   """
   def oauth_changeset(user, attrs) do
     user
-    |> cast(attrs, [:first_name, :last_name, :email, :username, :provider, :provider_uid])
+    |> cast(attrs, [:email, :username, :provider, :provider_uid])
     |> validate_required([:email, :username, :provider, :provider_uid])
     |> unique_constraint(:email)
     |> unique_constraint(:username)

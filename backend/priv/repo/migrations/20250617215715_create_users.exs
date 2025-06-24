@@ -11,8 +11,6 @@ defmodule ChatApp.Repo.Migrations.CreateUsers do
       add :id, :uuid, primary_key: true, default: fragment("gen_random_uuid()")
 
       # Add required user fields with NOT NULL constraints.
-      add :first_name, :string, null: true     # User's first name, non-required field, they can add it if they want, just optional, like last name yaknow?
-      add :last_name, :string, null: true       # Make last_name nullable to allow OAuth-only users
       add :email, :string, null: false          # User's email, required and unique
 
       # Add username field, required and unique
@@ -40,7 +38,7 @@ defmodule ChatApp.Repo.Migrations.CreateUsers do
     # Create unique index on username to prevent duplicates
     create unique_index(:users, [:username])
 
-    # TODO: Add it so oauth users can change their passwords
+    # TODO: Add it so oauth users can change their passwords and everyone else :p
     # Ensure a given provider+provider_uid combo only appears once
     create unique_index(:users, [:provider, :provider_uid])
   end

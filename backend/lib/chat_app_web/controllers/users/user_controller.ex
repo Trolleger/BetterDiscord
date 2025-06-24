@@ -1,20 +1,26 @@
 defmodule ChatAppWeb.Users.UserController do
   use ChatAppWeb, :controller
-
   alias ChatApp.Accounts
-  alias ChatApp.Accounts.User
 
+  # Use fallback controller to handle errors not caught here
   action_fallback ChatAppWeb.FallbackController
-  def register(conn, %{"user"=> user_params}) do
-  # passes users params
-  with {:ok,user} <- Accounts.create_user(user_params) do
-    # With okay and user if this all goes well, we are going to continue inside of this, so we pass the connection
-    conn
-    |>put_status(:created)
-    # It returns a 201 code on the http connection
-    |>text("User succsessfully registered with email:" <> " " <> user.email)
-    # What this basically does is going to do is just return the message and we pass just the  email to make sure we don't deliver a lot of information after the registration
-    # since it is not YET needed
+
+  # This action handles user registration
+  # Expects params directly as %{ "email" => ..., "username" => ..., "password" => ... }
+  def register(conn, user_params) do
+    # Try to create user with given params
+    case Accounts.create_user(user_params) do
+      {:ok, user} ->
+        conn
+        |> put_status(:created) # HTTP 201 Created
+        |> json(%{
+          message: "User successfully registered",
+          email: user.email,
+          username: user.username
+        })
+      {:error, changeset} ->
+        # Return the error tuple - fallback controller will handle it
+        {:error, changeset}
+    end
   end
-end
 end

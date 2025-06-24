@@ -26,9 +26,14 @@ defmodule ChatAppWeb.Endpoint do
     signing_salt: "CHANGE_ME"
   )
 
+  # Use env directly — no backup, no games
   plug(CORSPlug,
     origin: String.split(System.get_env("CORS_ORIGINS") || "", ","),
-    allow_credentials: true
+    headers: ["Authorization", "Content-Type", "Accept"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_credentials: true,
+    send_preflight_response?: true
+    # *So no 204 header errors ^
   )
 
   plug(ChatAppWeb.Router)
