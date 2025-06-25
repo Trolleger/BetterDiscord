@@ -1,85 +1,142 @@
-# lib/chat_app_web/controllers/auth_controller.ex
 defmodule ChatAppWeb.AuthController do
   use ChatAppWeb, :controller
-  plug Ueberauth
+  plug(Ueberauth)
 
-  # OAuth request phase: Ueberauth handles redirect to provider automatically
+  # OAuth request phase: handled by Ueberauth redirecting to provider
   def request(conn, %{"provider" => _provider}) do
-    # Ueberauth will redirect to the provider's login page automatically
     conn
   end
 
-  # OAuth callback phase: provider redirects back here with user info
- def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
-  # Extract the full name from OAuth data, fallback to empty string if missing
-  full_name = auth.info.name || ""
+  # OAuth callback: provider redirects here with user info
+  def callback(%{assigns: %{ueberauth_auth: auth}} = conn, _params) do
+    # Extract full name, split into first + last
+    full_name = auth.info.name || ""
+    [first_name | rest] = String.split(full_name)
+    last_name = Enum.join(rest, " ") || "Unknown"
 
-  # Split full name into first name and the rest as last name
-  [first_name | rest] = String.split(full_name)
-  last_name = Enum.join(rest, " ") || "Unknown"  # Use "Unknown" if last name missing
+    # Prepare attrs for user find/create
+    user_attrs = %{
+      first_name: first_name,
+      last_name: last_name,
+      email: auth.info.email,
+      provider: to_string(auth.provider),
+      provider_uid: auth.uid
+    }
 
-  # Build a map of user attributes for lookup or creation in DB
-  user_attrs = %{
-    first_name: first_name,
-    last_name: last_name,
-    email: auth.info.email,
-    provider: to_string(auth.provider),  # Convert provider atom to string, e.g., "google"
-    provider_uid: auth.uid               # Unique ID from the OAuth provider
-  }
+    with {:ok, user} <- ChatApp.Accounts.get_or_create_oauth_user(user_attrs) do
+      if is_nil(user.username) do
+        # No username means incomplete profile — create temp JWT token
+        {:ok, temp_token, _claims} = ChatApp.Guardian.encode_and_sign(user, %{}, token_type: :temp)
 
-  # Try to find or create the user in your system
-  with {:ok, user} <- ChatApp.Accounts.get_or_create_oauth_user(user_attrs) do
-    # Check if the user has a username set
-    if is_nil(user.username) do
-      # User has no username yet — needs to complete profile
+        conn
+        |> put_resp_cookie("temp_user_token", temp_token, http_only: true, max_age: 300)
+        |> redirect(to: "/complete-profile")
+      else
+        # Complete user — issue full JWT token for SPA
+        {:ok, token, _claims} = ChatApp.Guardian.encode_and_sign(user)
 
-      # Create a temporary JWT token (with type :temp) to hold user state securely
-      {:ok, temp_token, _claims} = ChatApp.Guardian.encode_and_sign(user, %{}, token_type: :temp)
-
-      conn
-      # Store the temp token in an HTTP-only cookie, expires in 5 minutes (300 seconds)
-      |> put_resp_cookie("temp_user_token", temp_token, http_only: true, max_age: 300)
-      # Redirect the user to frontend route "/complete-profile" to finish setup
-      |> redirect(to: "/complete-profile")
+        json(conn, %{
+          token: token,
+          user: %{id: user.id, email: user.email, username: user.username}
+        })
+      end
     else
-      # User has username — issue a full JWT token for normal login
-      {:ok, token, _claims} = ChatApp.Guardian.encode_and_sign(user)
-
-      # Return the token and basic user info as JSON (for SPA frontend to consume)
-      json(conn, %{token: token, user: %{id: user.id, email: user.email, username: user.username}})
+      _error ->
+        conn
+        |> put_status(:unauthorized)
+        |> json(%{error: "OAuth login failed"})
     end
-  else
-    # Something failed in user creation or retrieval — respond with unauthorized error
-    _error ->
-      conn
-      |> put_status(:unauthorized)
-      |> json(%{error: "OAuth login failed"})
   end
-end
 
-
-  # Handle OAuth failures (e.g., user denied permissions)
+  # OAuth failure handler (e.g., user denied permissions)
   def callback(%{assigns: %{ueberauth_failure: _fails}} = conn, _params) do
     conn
     |> redirect(external: "http://localhost:3000/?auth=error&message=Authentication failed")
   end
 
-  # Logout endpoint: clears session and confirms logout
+  # Logout clears session and confirms
   def logout(conn, _params) do
     conn
     |> clear_session()
     |> json(%{message: "Logged out successfully"})
   end
 
-  # User info endpoint: returns current user from session or 401 if none
+  # Returns current user info from session or 401 if none
   def user(conn, _params) do
     case get_session(conn, :current_user) do
       nil ->
         conn
         |> put_status(:unauthorized)
         |> json(%{error: "Not authenticated"})
+
       user ->
         json(conn, %{user: user})
     end
+  end
+
+  # --- Profile completion endpoint ---
+
+  def complete_profile(conn, %{"username" => username}) do
+    with {:ok, temp_token} <- fetch_temp_token(conn),
+         {:ok, user, _claims} <- ChatApp.Guardian.resource_from_token(temp_token),
+         :ok <- validate_username(username),
+         {:ok, updated_user} <- update_username(user, username),
+         {:ok, full_token, _claims} <- ChatApp.Guardian.encode_and_sign(updated_user) do
+      # Clear temp token cookie since profile is now complete
+      conn
+      |> delete_resp_cookie("temp_user_token")
+      |> json(%{
+        token: full_token,
+        user: %{id: updated_user.id, email: updated_user.email, username: updated_user.username}
+      })
+    else
+      {:error, :missing_token} ->
+        conn
+        |> put_status(:unauthorized)
+        |> json(%{error: "Missing or invalid token"})
+
+      {:error, :invalid_token} ->
+        conn
+        |> put_status(:unauthorized)
+        |> json(%{error: "Invalid token"})
+
+      {:error, :invalid_username} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: "Username invalid or taken"})
+
+      {:error, _} ->
+        conn
+        |> put_status(:internal_server_error)
+        |> json(%{error: "Something went wrong"})
+    end
+  end
+
+  # Helpers for complete_profile action
+
+  defp fetch_temp_token(conn) do
+    case Plug.Conn.get_req_cookie(conn, "temp_user_token") do
+      nil -> {:error, :missing_token}
+      token -> {:ok, token}
+    end
+  end
+
+  defp validate_username(username) do
+    # Basic check: alphanumeric + underscores, length 3-20, unique in DB
+    if Regex.match?(~r/^\w{3,20}$/, username) and !username_taken?(username) do
+      :ok
+    else
+      {:error, :invalid_username}
+    end
+  end
+
+  defp username_taken?(username) do
+    ChatApp.Repo.get_by(ChatApp.Accounts.User, username: username) != nil
+  end
+
+  defp update_username(user, username) do
+    user
+    |> ChatApp.Accounts.User.username_changeset(%{username: username})
+    |> ChatApp.Repo.update()
   end
 end

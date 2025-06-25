@@ -1,4 +1,3 @@
-# lib/chat_app/accounts.ex
 defmodule ChatApp.Accounts do
   @moduledoc """
   The Accounts context.
@@ -54,16 +53,9 @@ defmodule ChatApp.Accounts do
   """
   def authenticate_user(email, password) do
     with {:ok, user} <- get_by_email(email) do
-      # Debug output for authentication check
-      # IO.inspect(email, label: "[AUTH] Email")
-      # IO.inspect(password, label: "[AUTH] Raw password input")
-      # IO.inspect(user.hashed_password, label: "[AUTH] Stored password hash in DB")
-
       if validate_password(password, user.hashed_password) do
-        # IO.puts("[AUTH] Password valid ✔")
         {:ok, user}
       else
-        # IO.puts("[AUTH] Password mismatch ❌")
         {:error, :unauthorized}
       end
     end
@@ -79,20 +71,32 @@ defmodule ChatApp.Accounts do
   Finds or creates a user from OAuth data.
   - Checks by provider+provider_uid first.
   - Falls back to email match for linking accounts.
+  - If found by email but missing provider info, updates it.
   - Creates new user with `oauth_changeset/2` if none found.
   """
-  def get_or_create_oauth_user(
-        %{email: email, provider: provider, provider_uid: provider_uid} = attrs
-      ) do
-    user =
-      Repo.get_by(User, provider: provider, provider_uid: provider_uid) ||
-        Repo.get_by(User, email: email)
-
-    case user do
+  def get_or_create_oauth_user(%{
+        email: email,
+        provider: provider,
+        provider_uid: provider_uid
+      } = attrs) do
+    case Repo.get_by(User, provider: provider, provider_uid: provider_uid) do
       nil ->
-        %User{}
-        |> User.oauth_changeset(attrs)
-        |> Repo.insert()
+        case Repo.get_by(User, email: email) do
+          nil ->
+            %User{}
+            |> User.oauth_changeset(attrs)
+            |> Repo.insert()
+
+          user ->
+            changeset =
+              user
+              |> User.oauth_changeset(attrs)
+
+            case Repo.update(changeset) do
+              {:ok, updated_user} -> {:ok, updated_user}
+              {:error, changeset} -> {:error, changeset}
+            end
+        end
 
       user ->
         {:ok, user}

@@ -1,10 +1,12 @@
 defmodule ChatApp.Accounts.User do
   @moduledoc """
   The Ecto schema for users.
+
   - `:password` is a virtual field used only for input.
   - `:hashed_password` is what's stored in the database.
   - `:provider` and `:provider_uid` track OAuth users.
   """
+
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -51,20 +53,32 @@ defmodule ChatApp.Accounts.User do
     |> encrypt_and_put_password()
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+\.[^\s]+$/, message: "must be a valid email")
     |> validate_length(:password, min: 8, message: "Password Has To Be At Least 8 Characters")
-    |> validate_length(:username, max: 30, message: "Username Can Not Be Longer then 30 Characters")
+    |> validate_length(:username, max: 30, message: "Username Can Not Be Longer than 30 Characters")
   end
 
   @doc """
   Changeset for OAuth-based users.
-  Requires provider + UID + email + username.
+  Requires provider + UID + email + username (username optional).
   """
   def oauth_changeset(user, attrs) do
     user
     |> cast(attrs, [:email, :username, :provider, :provider_uid])
-    |> validate_required([:email, :username, :provider, :provider_uid])
+    |> validate_required([:email, :provider, :provider_uid])
     |> unique_constraint(:email)
     |> unique_constraint(:username)
     |> unique_constraint(:provider_uid)
+  end
+
+  @doc """
+  Changeset specifically for updating username during profile completion.
+  Validates presence, format, and uniqueness.
+  """
+  def username_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:username])
+    |> validate_required([:username])
+    |> validate_format(:username, ~r/^\w{3,20}$/, message: "Username must be 3-20 chars, alphanumeric or underscore")
+    |> unique_constraint(:username)
   end
 
   defp encrypt_and_put_password(changeset) do
