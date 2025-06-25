@@ -1,54 +1,56 @@
 defmodule ChatAppWeb.Router do
+  @moduledoc """
+  Defines app routes:
+
+  - OAuth routes handled by Ueberauth plug.
+  - Public API routes accepting JSON.
+  - Protected API routes requiring JWT authentication via Guardian pipeline.
+  """
+
   use ChatAppWeb, :router
 
-  # Pipeline for JSON API requests
+  # Accept JSON requests
   pipeline :api do
-    plug(:accepts, ["json"])
+    plug :accepts, ["json"]
   end
 
-  # Pipeline to plug Ueberauth (OAuth)
+  # Pipeline for OAuth routes (adds Ueberauth plug)
   pipeline :oauth do
-    plug(Ueberauth)
+    plug Ueberauth
   end
 
-  # Pipeline for JWT authentication (Guardian)
+  # Pipeline to enforce Guardian authentication on protected routes
   pipeline :auth do
-    plug(ChatApp.Guardian.AuthPipeline)
+    plug ChatApp.Guardian.AuthPipeline
   end
 
-  # Public root health check
+  # Public status route
   scope "/", ChatAppWeb do
-    pipe_through(:api)
-    get("/", StatusController, :status)
+    pipe_through :api
+    get "/", StatusController, :status
   end
 
-  # OAuth routes: request + callback
+  # OAuth login and callback routes
   scope "/", ChatAppWeb do
-    pipe_through([:api, :oauth])
-    get("/auth/:provider", AuthController, :request)
-    get("/auth/:provider/callback", AuthController, :callback)
+    pipe_through [:api, :oauth]
+    get "/auth/:provider", AuthController, :request    # Redirect to OAuth provider
+    get "/auth/:provider/callback", AuthController, :callback  # OAuth callback handling
   end
 
-  # Public API routes (no auth needed)
+  # Public API routes - registration, manual login, token refresh, logout
   scope "/api", ChatAppWeb do
-    pipe_through(:api)
-
-    post("/users", Users.UserController, :register)
-    post("/session/new", Auth.SessionController, :new)
-
-    get("/status", StatusController, :status)
-    get("/healthcheck", HealthcheckController, :index)
-
-    # Profile completion endpoint (needs temp token from cookie)
-    post("/complete-profile", AuthController, :complete_profile)
+    pipe_through :api
+    post "/register", Auth.SessionController, :register   # Add this line for registration
+    post "/login", Auth.SessionController, :new           # Manual login (email/password)
+    post "/refresh", Auth.SessionController, :refresh     # Refresh access token with refresh token cookie
+    delete "/logout", Auth.SessionController, :delete     # Logout clears refresh token cookie
   end
 
-  # Protected API routes (require valid JWT)
+  # Protected API routes that require valid access token
   scope "/api", ChatAppWeb do
-    pipe_through([:api, :auth])
+    pipe_through [:api, :auth]
 
-    post("/session/refresh", Auth.SessionController, :refresh)
-    post("/session/delete", Auth.SessionController, :delete)
-    get("/profile", Users.ProfileController, :show)
+    get "/profile", AuthController, :user                 # Get current user info
+    post "/complete-profile", AuthController, :complete_profile  # Complete profile (e.g. username) after OAuth login
   end
 end
