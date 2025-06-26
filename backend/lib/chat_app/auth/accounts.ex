@@ -2,18 +2,19 @@ defmodule ChatApp.Accounts do
   @moduledoc """
   Handles user registration, authentication, OAuth linking, and username updates.
   """
-
   import Ecto.Query, warn: false
   alias ChatApp.Repo
-  alias ChatApp.Accounts.User
+  alias ChatApp.Auth.User
   alias Bcrypt
 
+  # Creates a new user with registration params
   def create_user(attrs) do
     %User{}
     |> User.registration_changeset(attrs)
     |> Repo.insert()
   end
 
+  # Authenticates user by email and password
   def authenticate_user(email, plain_password) do
     case get_by_email(email) do
       nil -> {:error, :user_not_found}
@@ -26,12 +27,17 @@ defmodule ChatApp.Accounts do
     end
   end
 
-  def get_by_email(email) do
+  # Get user by email
+  def get_by_email(email) when is_binary(email) do
     Repo.get_by(User, email: email)
   end
 
-  def get_by_id!(id), do: Repo.get!(User, id)
+  # Get user by ID, raise if not found
+  def get_by_id!(id) do
+    Repo.get!(User, id)
+  end
 
+  # Find or create user via OAuth data
   def get_or_create_oauth_user(%{
         email: email,
         provider: provider,
@@ -50,7 +56,6 @@ defmodule ChatApp.Accounts do
               username: username
             })
             |> Repo.insert()
-
           user ->
             user
             |> User.oauth_changeset(%{
@@ -59,12 +64,12 @@ defmodule ChatApp.Accounts do
             })
             |> Repo.update()
         end
-
       user -> {:ok, user}
     end
   end
 
-  def update_username(user, attrs) do
+  # Update username for a user
+  def update_username(%User{} = user, attrs) do
     user
     |> User.username_changeset(attrs)
     |> Repo.update()

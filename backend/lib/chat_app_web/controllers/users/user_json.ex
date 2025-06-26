@@ -1,5 +1,5 @@
 defmodule ChatAppWeb.Users.UserJSON do
-  alias ChatApp.Accounts.User
+  alias ChatApp.Auth.User
 
   @doc """
   Renders a list of users.
@@ -17,16 +17,11 @@ defmodule ChatAppWeb.Users.UserJSON do
     %{data: data(user)}
   end
 
-  # This is the actual map of user data we expose to the frontend.
-  # It MUST only include fields that are defined in the User schema.
-  # NEVER include sensitive fields like password or hashed_password.
   defp data(%User{} = user) do
     %{
       id: user.id,
       email: user.email,
       username: user.username
-      # Removed: first_name and last_name (they don't exist in schema)
-      # Removed: password (should NEVER be sent to frontend)
     }
   end
 end

@@ -1,11 +1,9 @@
 defmodule ChatApp.Guardian do
   @moduledoc """
   Guardian implementation for JWT authentication:
-
   - Uses user ID as subject
   - Loads user resource from token claims
   """
-
   use Guardian, otp_app: :chat_app
   alias ChatApp.Accounts
 
