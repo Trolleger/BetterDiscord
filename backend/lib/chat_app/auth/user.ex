@@ -1,10 +1,13 @@
 defmodule ChatApp.Auth.User do
   @moduledoc "Ecto schema and changesets for users (email/password + optional OAuth)."
+
   use Ecto.Schema
   import Ecto.Changeset
   alias Bcrypt
 
   @primary_key {:id, :binary_id, autogenerate: true}
+
+  @derive {Jason.Encoder, only: [:id, :email, :username, :provider, :provider_uid, :created_at, :updated_at]}
   schema "users" do
     field :email, :string
     field :username, :string
@@ -16,7 +19,6 @@ defmodule ChatApp.Auth.User do
     timestamps(inserted_at: :created_at, updated_at: :updated_at, type: :utc_datetime)
   end
 
-  @doc "Manual registration (email/password)"
   def registration_changeset(struct, attrs) do
     struct
     |> cast(attrs, [:email, :username, :password])
@@ -29,7 +31,6 @@ defmodule ChatApp.Auth.User do
     |> put_hashed_password()
   end
 
-  @doc "OAuth login (first-time or link)"
   def oauth_changeset(struct, attrs) do
     struct
     |> cast(attrs, [:email, :provider, :provider_uid, :username])
@@ -38,7 +39,6 @@ defmodule ChatApp.Auth.User do
     |> unique_constraint(:provider_uid)
   end
 
-  @doc "OAuth user sets a password later"
   def set_password_changeset(struct, attrs) do
     struct
     |> cast(attrs, [:password])
@@ -47,7 +47,6 @@ defmodule ChatApp.Auth.User do
     |> put_hashed_password()
   end
 
-  @doc "Used when user updates their username"
   def username_changeset(struct, attrs) do
     struct
     |> cast(attrs, [:username])

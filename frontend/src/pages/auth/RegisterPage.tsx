@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { useNavigate, Navigate } from "react-router-dom";
+import { useAuth } from "../../features/auth/auth";
+import api from "../../features/auth/api";
 
 export function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -11,6 +10,9 @@ export function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  if (isAuthenticated) return <Navigate to="/channels/@me" replace />;
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,32 +20,23 @@ export function RegisterPage() {
     setLoading(true);
 
     try {
-      // Your backend expects user object, and endpoint is /api/register
-      await axios.post(`${API_BASE_URL}/api/register`, {
-        user: {
-          email,
-          username,
-          password,
-        }
+      await api.post("/api/register", {
+        user: { email, username, password }
       });
-      
-      alert("Registered successfully! Please log in.");
+
+      alert("Registered successfully. Please log in.");
       navigate("/login");
     } catch (err: any) {
-      console.log("Registration error:", err);
       let errorMessage = "Registration failed";
 
       if (err.response?.status === 422 && err.response?.data?.errors) {
-        // Handle Ecto changeset errors from FallbackController
         const errors = err.response.data.errors;
         const errorMessages = Object.entries(errors).map(([field, messages]) =>
-          `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`
+          `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`
         );
-        errorMessage = errorMessages.join('; ');
+        errorMessage = errorMessages.join("; ");
       } else if (err.response?.data?.error) {
         errorMessage = err.response.data.error;
-      } else if (err.response?.status === 422) {
-        errorMessage = "Please check your input and try again";
       }
 
       setError(errorMessage);
@@ -64,17 +57,17 @@ export function RegisterPage() {
         onChange={(e) => setEmail(e.target.value)}
         required
       />
-      
+
       <input
         type="text"
-        placeholder="Username (3-30 chars)"
+        placeholder="Username (3–30 chars)"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         required
         minLength={3}
         maxLength={30}
       />
-      
+
       <input
         type="password"
         placeholder="Password (min 8 chars)"
@@ -83,7 +76,7 @@ export function RegisterPage() {
         required
         minLength={8}
       />
-      
+
       <button type="submit" disabled={loading}>
         {loading ? "Registering..." : "Register"}
       </button>
