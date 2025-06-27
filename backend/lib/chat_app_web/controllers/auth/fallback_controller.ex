@@ -20,4 +20,17 @@ defmodule ChatAppWeb.FallbackController do
     |> put_view(html: ChatAppWeb.ErrorHTML, json: ChatAppWeb.ErrorJSON)
     |> render(:"404")
   end
+
+  # Handle authentication errors
+  def call(conn, {:error, :user_not_found}) do
+    conn
+    |> put_status(:unauthorized)
+    |> json(%{error: "Invalid credentials"})
+  end
+
+  def call(conn, {:error, :invalid_password}) do
+    conn
+    |> put_status(:unauthorized)
+    |> json(%{error: "Invalid credentials"})
+  end
 end

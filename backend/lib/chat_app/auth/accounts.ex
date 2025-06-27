@@ -27,6 +27,33 @@ defmodule ChatApp.Accounts do
     end
   end
 
+  # Authenticates user by email OR username
+  def authenticate_user_by_login(email_or_username, password) do
+    user = case is_valid_email?(email_or_username) do
+      true -> Repo.get_by(User, email: email_or_username)
+      false -> Repo.get_by(User, username: email_or_username)
+    end
+
+    case user do
+      nil ->
+        {:error, :user_not_found}
+      %User{hashed_password: nil} ->
+        {:error, :invalid_password}
+      %User{hashed_password: hash} = user ->
+        if Bcrypt.verify_pass(password, hash) do
+          {:ok, user}
+        else
+          {:error, :invalid_password}
+        end
+    end
+  end
+
+  # Better email validation than just checking for "@"
+  defp is_valid_email?(string) do
+    email_regex = ~r/^[^\s]+@[^\s]+\.[^\s]+$/
+    String.match?(string, email_regex)
+  end
+
   # Get user by email
   def get_by_email(email) when is_binary(email) do
     Repo.get_by(User, email: email)
