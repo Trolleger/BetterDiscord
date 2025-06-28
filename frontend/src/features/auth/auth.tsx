@@ -6,13 +6,12 @@ interface User {
   id: string;
   email: string;
   username: string;
-  // Add other user properties as needed
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (token: string) => Promise<void>;
+  login: (accessToken: string, refreshToken: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   error: string | null;
@@ -44,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: any) {
       console.warn("Auth check failed:", err.message);
       localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
       setUser(null);
     } finally {
       setLoading(false);
@@ -54,16 +54,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, [checkAuth]);
 
-  const login = useCallback(async (token: string) => {
+  const login = useCallback(async (accessToken: string, refreshToken: string) => {
     setLoading(true);
     setError(null);
-    
+   
     try {
-      localStorage.setItem("access_token", token);
+      localStorage.setItem("access_token", accessToken);
+      localStorage.setItem("refresh_token", refreshToken);
       const response = await api.get("/api/profile");
       setUser(response.data.user);
     } catch (error: any) {
       localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
       setUser(null);
       setError("Failed to authenticate user");
       throw error;
@@ -75,9 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     setLoading(true);
     localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     setUser(null);
     setError(null);
-    
+   
     api.delete("/api/logout").catch((err) => {
       console.warn("Logout API call failed:", err.message);
     }).finally(() => {
@@ -85,13 +88,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // MEMOIZE THE CONTEXT VALUE - this was the missing piece!
   const contextValue = useMemo(() => ({
     user,
     loading,
     login,
     logout,
-    isAuthenticated: !!user && !loading,
+    isAuthenticated: !!user,
     error,
     clearError,
   }), [user, loading, login, logout, error, clearError]);
@@ -113,23 +115,14 @@ export function useAuth() {
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
-  
+ 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        Loading...
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
       </div>
     );
   }
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
+ 
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
