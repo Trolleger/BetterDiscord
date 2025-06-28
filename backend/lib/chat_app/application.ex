@@ -13,7 +13,7 @@ defmodule ChatApp.Application do
       {DNSCluster, query: Application.get_env(:chat_app, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: ChatApp.PubSub},
       {Finch, name: ChatApp.Finch},
-      ChatAppWeb.Endpoint,
+      ChatAppWeb.Endpoint
       # Start the mediasoup client WebSocket connector
     ]
 

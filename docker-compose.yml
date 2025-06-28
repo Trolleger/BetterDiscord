@@ -1,14 +1,13 @@
 version: "3.9"
 
 services:
-
   cockroach-init:
     image: alpine:latest
     container_name: cockroach-init
     volumes:
-      - ./certs:/certs
+      - ./certs:/certs  # No :ro, so it's read-write
     command: >
-      sh -c "chmod 600 /certs/*.key && chmod 644 /certs/*.crt"
+      sh -c "chmod 600 /certs/*.key && chmod 644 /certs/ca.crt /certs/client.root.crt"
     restart: "no"
 
   cockroachdb:
@@ -61,15 +60,15 @@ services:
     container_name: backend
     build:
       context: ./backend
+      dockerfile: Dockerfile.dev
       args:
         - BUILDKIT_INLINE_CACHE=1
     env_file:
-      - ./env/.env   # <- add this line to load GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET from your env folder
-      - ./backend/.env # <- keep this if you still want other env vars from backend/.env
+      - ./env/.env
+      - ./backend/.env
     environment:
       MIX_ENV: "dev"
       PHX_HOST: "0.0.0.0"
-      # Remove hardcoded GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET from here!
     ports:
       - "127.0.0.1:4000:4000"
     volumes:
@@ -85,7 +84,6 @@ services:
       db-init:
         condition: service_completed_successfully
     restart: unless-stopped
-
 
   betterdiscord-coturn:
     container_name: betterdiscord-coturn

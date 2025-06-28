@@ -1,83 +1,135 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
-import api from './api'; // Fixed: using api client instead of raw axios
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from "react";
+import { Navigate } from "react-router-dom";
+import api from "./api";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+interface User {
+  id: string;
+  email: string;
+  username: string;
+  // Add other user properties as needed
+}
 
-// Auth context
 interface AuthContextType {
-  user: any;
+  user: User | null;
   loading: boolean;
   login: (token: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  error: string | null;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Auth provider
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    checkAuth();
+  const clearError = useCallback(() => {
+    setError(null);
   }, []);
 
-  const checkAuth = async () => {
-    const token = localStorage.getItem('access_token');
+  const checkAuth = useCallback(async () => {
+    const token = localStorage.getItem("access_token");
     if (!token) {
       setLoading(false);
       return;
     }
 
     try {
-      const response = await api.get('/api/profile'); // Fixed: using api client (already has token)
+      const response = await api.get("/api/profile");
       setUser(response.data.user);
-    } catch (error) {
-      localStorage.removeItem('access_token');
+      setError(null);
+    } catch (err: any) {
+      console.warn("Auth check failed:", err.message);
+      localStorage.removeItem("access_token");
       setUser(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const login = async (token: string) => {
-    localStorage.setItem('access_token', token);
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  const login = useCallback(async (token: string) => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      const response = await api.get('/api/profile'); // Fixed: using api client
+      localStorage.setItem("access_token", token);
+      const response = await api.get("/api/profile");
       setUser(response.data.user);
-    } catch (error) {
-      localStorage.removeItem('access_token');
+    } catch (error: any) {
+      localStorage.removeItem("access_token");
+      setUser(null);
+      setError("Failed to authenticate user");
       throw error;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const logout = () => {
-    localStorage.removeItem('access_token');
+  const logout = useCallback(() => {
+    setLoading(true);
+    localStorage.removeItem("access_token");
     setUser(null);
-    api.delete('/api/logout').catch(() => {}); // Fixed: using api client with auth header
-  };
+    setError(null);
+    
+    api.delete("/api/logout").catch((err) => {
+      console.warn("Logout API call failed:", err.message);
+    }).finally(() => {
+      setLoading(false);
+    });
+  }, []);
+
+  // MEMOIZE THE CONTEXT VALUE - this was the missing piece!
+  const contextValue = useMemo(() => ({
+    user,
+    loading,
+    login,
+    logout,
+    isAuthenticated: !!user && !loading,
+    error,
+    clearError,
+  }), [user, loading, login, logout, error, clearError]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-// Auth hook
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
   return context;
 }
 
-// Protected route component
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
- 
-  if (loading) return <div>Loading...</div>;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh' 
+      }}>
+        Loading...
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
   return <>{children}</>;
 }

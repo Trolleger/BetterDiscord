@@ -21,24 +21,26 @@ export function RegisterPage() {
 
     try {
       await api.post("/api/register", {
-        user: { email, username, password }
+        user: { email, username, password },
       });
-
       alert("Registered successfully. Please log in.");
       navigate("/login");
     } catch (err: any) {
+      console.error("Register error:", err);
       let errorMessage = "Registration failed";
 
       if (err.response?.status === 422 && err.response?.data?.errors) {
         const errors = err.response.data.errors;
-        const errorMessages = Object.entries(errors).map(([field, messages]) =>
-          `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`
+        const errorMessages = Object.entries(errors).map(
+          ([field, messages]) =>
+            `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`
         );
         errorMessage = errorMessages.join("; ");
       } else if (err.response?.data?.error) {
         errorMessage = err.response.data.error;
+      } else if (err.message) {
+        errorMessage = err.message;
       }
-
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -49,15 +51,14 @@ export function RegisterPage() {
     <form onSubmit={handleRegister}>
       <h1>Register</h1>
       {error && <p style={{ color: "red" }}>{error}</p>}
-
       <input
         type="email"
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required
+        disabled={loading}
       />
-
       <input
         type="text"
         placeholder="Username (3–30 chars)"
@@ -66,8 +67,8 @@ export function RegisterPage() {
         required
         minLength={3}
         maxLength={30}
+        disabled={loading}
       />
-
       <input
         type="password"
         placeholder="Password (min 8 chars)"
@@ -75,8 +76,8 @@ export function RegisterPage() {
         onChange={(e) => setPassword(e.target.value)}
         required
         minLength={8}
+        disabled={loading}
       />
-
       <button type="submit" disabled={loading}>
         {loading ? "Registering..." : "Register"}
       </button>

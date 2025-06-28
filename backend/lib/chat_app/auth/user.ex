@@ -7,7 +7,8 @@ defmodule ChatApp.Auth.User do
 
   @primary_key {:id, :binary_id, autogenerate: true}
 
-  @derive {Jason.Encoder, only: [:id, :email, :username, :provider, :provider_uid, :created_at, :updated_at]}
+  @derive {Jason.Encoder,
+           only: [:id, :email, :username, :provider, :provider_uid, :created_at, :updated_at]}
   schema "users" do
     field :email, :string
     field :username, :string

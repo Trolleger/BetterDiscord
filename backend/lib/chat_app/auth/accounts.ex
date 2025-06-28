@@ -17,7 +17,9 @@ defmodule ChatApp.Accounts do
   # Authenticates user by email and password
   def authenticate_user(email, plain_password) do
     case get_by_email(email) do
-      nil -> {:error, :user_not_found}
+      nil ->
+        {:error, :user_not_found}
+
       %User{hashed_password: hashed_password} = user ->
         if hashed_password && Bcrypt.verify_pass(plain_password, hashed_password) do
           {:ok, user}
@@ -29,16 +31,19 @@ defmodule ChatApp.Accounts do
 
   # Authenticates user by email OR username
   def authenticate_user_by_login(email_or_username, password) do
-    user = case is_valid_email?(email_or_username) do
-      true -> Repo.get_by(User, email: email_or_username)
-      false -> Repo.get_by(User, username: email_or_username)
-    end
+    user =
+      case is_valid_email?(email_or_username) do
+        true -> Repo.get_by(User, email: email_or_username)
+        false -> Repo.get_by(User, username: email_or_username)
+      end
 
     case user do
       nil ->
         {:error, :user_not_found}
+
       %User{hashed_password: nil} ->
         {:error, :invalid_password}
+
       %User{hashed_password: hash} = user ->
         if Bcrypt.verify_pass(password, hash) do
           {:ok, user}
@@ -83,6 +88,7 @@ defmodule ChatApp.Accounts do
               username: username
             })
             |> Repo.insert()
+
           user ->
             user
             |> User.oauth_changeset(%{
@@ -91,7 +97,9 @@ defmodule ChatApp.Accounts do
             })
             |> Repo.update()
         end
-      user -> {:ok, user}
+
+      user ->
+        {:ok, user}
     end
   end
 

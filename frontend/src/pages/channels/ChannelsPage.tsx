@@ -1,16 +1,20 @@
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../../features/auth/auth';
+import DOMPurify from 'dompurify';
 
 export function ChannelsPage() {
   const { user, logout } = useAuth();
-  const { id } = useParams(); // will be "@me" or a server ID
+  const { '*': wildcardId } = useParams(); // catch everything after /channels/
+  
+  const sanitizedUsername = user?.username ? DOMPurify.sanitize(user.username) : '';
+  const sanitizedId = wildcardId ? DOMPurify.sanitize(wildcardId) : '';
 
   return (
     <div>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>Better Discord</h1>
         <div>
-          <span>Hello, {user?.username}!</span>
+          <span>Hello, {sanitizedUsername}!</span>
           <button
             onClick={logout}
             style={{ marginLeft: '10px', padding: '5px 10px' }}
@@ -19,15 +23,12 @@ export function ChannelsPage() {
           </button>
         </div>
       </header>
-
       <hr />
-
       <main>
-        {/* Render based on channel id */}
-        {id === '@me' ? (
+        {sanitizedId === '@me' ? (
           <p>You're in your DMs.</p>
         ) : (
-          <p>You're viewing server: {id}</p>
+          <p>You're viewing server: {sanitizedId}</p>
         )}
       </main>
     </div>

@@ -24,18 +24,20 @@ defmodule ChatAppWeb.Router do
     get "/", HealthcheckController, :index
   end
 
-  scope "/", ChatAppWeb do
-    pipe_through [:api, :oauth]
-    get "/auth/:provider", AuthController, :request
-    get "/auth/:provider/callback", AuthController, :callback
-  end
-
   scope "/api", ChatAppWeb do
     pipe_through :api
+    get "/health_check", HealthcheckController, :index
+
     post "/register", Auth.SessionController, :register
     post "/login", Auth.SessionController, :login
     post "/refresh", Auth.SessionController, :refresh
     delete "/logout", Auth.SessionController, :logout
+  end
+
+  scope "/", ChatAppWeb do
+    pipe_through [:api, :oauth]
+    get "/auth/:provider", AuthController, :request
+    get "/auth/:provider/callback", AuthController, :callback
   end
 
   scope "/api", ChatAppWeb do

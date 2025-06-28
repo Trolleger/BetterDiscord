@@ -1,13 +1,8 @@
 import React from 'react';
 
-interface GoogleLoginButtonProps {
-  apiBaseUrl: string;
-}
-
-export const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({ apiBaseUrl }) => {
+export const GoogleLoginButton: React.FC = () => {
   const handleGoogleLogin = () => {
-    // Fixed: Call the REQUEST endpoint, not the callback
-    window.location.href = `http://localhost:4000/auth/google`;
+    window.location.href = `${import.meta.env.VITE_API_BASE_URL}/auth/google`;
   };
 
   return (

@@ -13,13 +13,10 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-
-          {/* Redirect /app to @me */}
           <Route path="/app" element={<Navigate to="/channels/@me" replace />} />
-
-          {/* Protected channel routes */}
+          <Route path="/channels" element={<Navigate to="/channels/@me" replace />} />
           <Route
-            path="/channels/:id"
+            path="/channels/*"
             element={
               <ProtectedRoute>
                 <ChannelsPage />

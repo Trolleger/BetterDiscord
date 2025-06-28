@@ -44,11 +44,13 @@ defmodule ChatApp.MixProject do
       {:cors_plug, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.4", only: :dev},
       {:ueberauth, "~> 0.10"},
+      {:plug_cowboy, "~> 2.6"},
       {:guardian, "~> 2.0"},
       {:guardian_db, "~> 3.0"},
+      {:hackney, "~> 1.9"},
       # TODO: Later on add all the guardian_db functionality, for now we will just be using plain simple guardian
       {:ueberauth_google, "~> 0.12"},
-      {:bcrypt_elixir, "~> 2.0"},
+      {:bcrypt_elixir, "~> 2.0"}
     ]
   end
 

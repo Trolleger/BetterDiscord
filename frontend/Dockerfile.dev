@@ -2,9 +2,14 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Copy only package files first for caching
 COPY package.json yarn.lock ./
-RUN yarn install
 
+# Install deps inside container (clean slate)
+RUN yarn install 
+
+# Copy only source files — exclude node_modules etc via .dockerignore
 COPY . .
 
+# Start dev server
 CMD ["yarn", "dev"]

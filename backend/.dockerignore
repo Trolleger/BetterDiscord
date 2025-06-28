@@ -8,10 +8,8 @@ node_modules/
 *.swo
 .DS_Store
 *.log
-
-# Ignore secrets and local config
-secrets/
-.env
+dist/
+build/
 
 # Ignore test coverage and temp files
 .coverage/

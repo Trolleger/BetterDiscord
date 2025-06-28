@@ -10,6 +10,7 @@ defmodule ChatAppWeb.HealthcheckController do
     # It's just the Phoenix Standard name for the Get function you know?
 
     send_resp(conn, 200, "OK")
+
     # This code takes 3 arguments nothing fancy really it sends an HTTP response back to whoever made the request with the information It’s like you’re saying:
     # “Here’s your connection, mark it as successful, give you this ‘OK’ text, and send it now.”
     # They are Conn (Which explanation is of above) 200 which is the http code for Okay, you're good, and "OK" is just to keep it lightweight and nice

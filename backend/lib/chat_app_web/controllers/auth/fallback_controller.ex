@@ -5,7 +5,7 @@ defmodule ChatAppWeb.FallbackController do
   """
   use ChatAppWeb, :controller
 
-  # This clause handles errors returned by Ecto's insert/update/delete.
+  # Handle Ecto changeset errors
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     conn
     |> put_status(:unprocessable_entity)
@@ -13,7 +13,7 @@ defmodule ChatAppWeb.FallbackController do
     |> render(:error, changeset: changeset)
   end
 
-  # This clause is an example of how to handle resources that cannot be found.
+  # Handle not found errors
   def call(conn, {:error, :not_found}) do
     conn
     |> put_status(:not_found)
@@ -21,16 +21,24 @@ defmodule ChatAppWeb.FallbackController do
     |> render(:"404")
   end
 
-  # Handle authentication errors
+  # Handle authentication errors - user not found
   def call(conn, {:error, :user_not_found}) do
     conn
     |> put_status(:unauthorized)
     |> json(%{error: "Invalid credentials"})
   end
 
+  # Handle authentication errors - invalid password
   def call(conn, {:error, :invalid_password}) do
     conn
     |> put_status(:unauthorized)
     |> json(%{error: "Invalid credentials"})
+  end
+
+  # Catch-all for any other errors
+  def call(conn, _) do
+    conn
+    |> put_status(:internal_server_error)
+    |> json(%{error: "Internal server error"})
   end
 end

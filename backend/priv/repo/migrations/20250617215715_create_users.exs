@@ -11,17 +11,21 @@ defmodule ChatApp.Repo.Migrations.CreateUsers do
       add :id, :uuid, primary_key: true, default: fragment("gen_random_uuid()")
 
       # Add required user fields with NOT NULL constraints.
-      add :email, :string, null: false          # User's email, required and unique
+      # User's email, required and unique
+      add :email, :string, null: false
       # Add username field, required and unique
-      add :username, :string, null: false       # User's username, required and unique
+      # User's username, required and unique
+      add :username, :string, null: false
 
       # Hashed password column.
       # We make this nullable so OAuth-only users can exist without a password initially.
       add :hashed_password, :string, null: true
 
       # New fields for OAuth support:
-      add :provider, :string, null: true       # OAuth provider name (e.g., "google")
-      add :provider_uid, :string, null: true   # Unique ID from OAuth provider
+      # OAuth provider name (e.g., "google")
+      add :provider, :string, null: true
+      # Unique ID from OAuth provider
+      add :provider_uid, :string, null: true
 
       # Add timestamp columns for record creation and updates.
       # CockroachDB's Ecto adapter uses "created_at" instead of the default "inserted_at" for the insert timestamp.

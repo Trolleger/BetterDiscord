@@ -1,6 +1,9 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
@@ -10,18 +13,17 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      // preload: path.join(__dirname, 'preload.js'), // uncomment if you have preload.js
     },
   });
 
   const isDev = process.env.NODE_ENV === 'development';
+  const devURL = process.env.VITE_API_BASE_URL!; // no fallback, expect it to be set
 
   if (isDev) {
-    mainWindow.loadURL('http://localhost:3000');
+    mainWindow.loadURL(devURL);
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, '../build/index.html'));
-
   }
 
   mainWindow.on('closed', () => {
