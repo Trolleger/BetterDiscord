@@ -20,6 +20,15 @@ defmodule ChatAppWeb.Endpoint do
   plug(Plug.MethodOverride)
   plug(Plug.Head)
 
+  # Put CORSPlug here before session and router
+  plug(CORSPlug,
+    origin: String.split(System.get_env("CORS_ORIGINS") || "http://localhost:3000", ","),
+    headers: ["Authorization", "Content-Type", "Accept", "x-skip-auth-refresh"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_credentials: true,
+    send_preflight_response?: true
+  )
+
   plug(Plug.Session,
     store: :cookie,
     key: "_chat_app_key",
@@ -27,14 +36,6 @@ defmodule ChatAppWeb.Endpoint do
     secure: Mix.env() == :prod,
     http_only: true,
     same_site: "Lax"
-  )
-
-  plug(CORSPlug,
-    origin: String.split(System.get_env("CORS_ORIGINS") || "http://localhost:3000", ","),
-    headers: ["Authorization", "Content-Type", "Accept", "x-skip-auth-refresh"],
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_credentials: true,
-    send_preflight_response?: true
   )
 
   plug(ChatAppWeb.Plugs.CSPPlug)

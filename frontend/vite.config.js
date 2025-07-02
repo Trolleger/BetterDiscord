@@ -3,7 +3,6 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default ({ mode }) => {
-  // Load .env files based on current mode (development, production, etc)
   const env = loadEnv(mode, process.cwd(), "");
 
   return defineConfig({
@@ -26,6 +25,7 @@ export default ({ mode }) => {
       fs: {
         strict: false,
       },
+      allowedHosts: ['.ngrok-free.app'], // ✅ allows all ngrok subdomains
     },
     build: {
       target: "esnext",

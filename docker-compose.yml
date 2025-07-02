@@ -102,41 +102,41 @@ services:
           - coturn
     restart: unless-stopped
 
-  mediasoup-server:
-    container_name: mediasoup-server
-    build:
-      context: ./mediasoup-server
-    environment:
-      - MEDIASOUP_LISTEN_IP=0.0.0.0
-      - MEDIASOUP_ANNOUNCED_IP=host.docker.internal
-      - NODE_ENV=development
-    ports:
-      - "127.0.0.1:3100:3000/tcp"
-      - "127.0.0.1:40000-40100:40000-40100/udp"
-    volumes:
-      - ./mediasoup-server:/app
-      - mediasoup_modules:/app/node_modules
-    command: sh -c "yarn install && node server.js"
-    networks:
-      - betterdiscord
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    restart: unless-stopped
+  # mediasoup-server:
+  #   container_name: mediasoup-server
+  #   build:
+  #     context: ./mediasoup-server
+  #   environment:
+  #     - MEDIASOUP_LISTEN_IP=0.0.0.0
+  #     - MEDIASOUP_ANNOUNCED_IP=host.docker.internal
+  #     - NODE_ENV=development
+  #   ports:
+  #     - "127.0.0.1:3100:3000/tcp"
+  #     - "127.0.0.1:40000-40100:40000-40100/udp"
+  #   volumes:
+  #     - ./mediasoup-server:/app
+  #     - mediasoup_modules:/app/node_modules
+  #   command: sh -c "yarn install && node server.js"
+  #   networks:
+  #     - betterdiscord
+  #   extra_hosts:
+  #     - "host.docker.internal:host-gateway"
+  #   restart: unless-stopped
 
-  minio:
-    container_name: minio
-    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
-    command: server /data --console-address ":9001"
-    ports:
-      - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9001:9001"
-    env_file:
-      - ./env/.env.minio
-    volumes:
-      - minio-data:/data
-    networks:
-      - betterdiscord
-    restart: unless-stopped
+  # minio:
+  #   container_name: minio
+  #   image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+  #   command: server /data --console-address ":9001"
+  #   ports:
+  #     - "127.0.0.1:9000:9000"
+  #     - "127.0.0.1:9001:9001"
+  #   env_file:
+  #     - ./env/.env.minio
+  #   volumes:
+  #     - minio-data:/data
+  #   networks:
+  #     - betterdiscord
+  #   restart: unless-stopped
 
   frontend:
     container_name: frontend
