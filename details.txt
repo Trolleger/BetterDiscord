@@ -3,7 +3,7 @@ PLEASE USE POWERSHELL FOR ALL THESE COMMANDS! IDK ITS AUTISTIC! NOT BASH, POWERS
 # Step into the container
 docker exec -it cockroachdb ./cockroach sql --certs-dir=/cockroach/certs --user=root
 
-FOR NORMAL DOCKER-COMPOSE-DEV.yml On POWERSHELL
+FOR NORMAL DOCKER-COMPOSE.yml On POWERSHELL
 docker-compose down; docker-compose up -d
 
 # DROP DATABASE AND REMAKE. WARNING! WILL DROP ALL INFO!
