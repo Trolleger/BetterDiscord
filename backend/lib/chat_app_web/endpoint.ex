@@ -40,4 +40,8 @@ defmodule ChatAppWeb.Endpoint do
 
   plug(ChatAppWeb.Plugs.CSPPlug)
   plug(ChatAppWeb.Router)
+
+  socket "/socket", ChatAppWeb.UserSocket,
+    websocket: true,
+    longpoll: false
 end

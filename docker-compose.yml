@@ -1,4 +1,4 @@
-version: "3.9"
+# dont add no version nonsense
 
 services:
   cockroach-init:

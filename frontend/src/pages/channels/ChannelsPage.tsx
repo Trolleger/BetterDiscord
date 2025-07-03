@@ -1,13 +1,29 @@
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../../features/auth/auth';
 import DOMPurify from 'dompurify';
+import { useEffect } from 'react';
+// @ts-ignore
+import socket from '../../helpers/socket/socket.js';
+
+// Extend Window interface so TS knows about window.socket
+declare global {
+  interface Window {
+    socket: typeof socket;
+  }
+}
 
 export function ChannelsPage() {
   const { user, logout } = useAuth();
-  const { '*': wildcardId } = useParams(); // catch everything after /channels/
-  
+  const { '*': wildcardId } = useParams();
+
   const sanitizedUsername = user?.username ? DOMPurify.sanitize(user.username) : '';
   const sanitizedId = wildcardId ? DOMPurify.sanitize(wildcardId) : '';
+
+  useEffect(() => {
+    console.log('Socket connected:', socket.isConnected());
+    console.log('Socket state:', socket.connectionState());
+    window.socket = socket;  // No TS error now
+  }, []);
 
   return (
     <div>

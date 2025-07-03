@@ -29,12 +29,14 @@
     "expo": "^53.0.9",
     "expo-status-bar": "^2.2.3",
     "mediasoup-client": "^3.11.0",
+    "phoenix": "^1.7.21",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-native": "^0.79.2",
     "react-native-web": "^0.20.0",
     "react-query": "^3.39.3",
     "react-router-dom": "^7.6.2",
+    "wscat": "^6.1.0",
     "zustand": "^5.0.4"
   },
   "devDependencies": {
