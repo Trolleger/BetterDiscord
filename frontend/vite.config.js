@@ -4,7 +4,7 @@ import path from "path";
 
 export default ({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-
+  
   return defineConfig({
     plugins: [react()],
     resolve: {
@@ -20,12 +20,15 @@ export default ({ mode }) => {
     },
     server: {
       host: "0.0.0.0",
-      port: Number(env.VITE_DEV_SERVER_PORT),
+      port: Number(env.VITE_DEV_SERVER_PORT) || 3000,
       strictPort: true,
+      watch: {
+        usePolling: true,
+        interval: 300,
+      },
       fs: {
         strict: false,
       },
-      allowedHosts: ['.ngrok-free.app'], // ✅ allows all ngrok subdomains
     },
     build: {
       target: "esnext",

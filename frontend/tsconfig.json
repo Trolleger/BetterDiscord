@@ -12,9 +12,10 @@
     "paths": {
       "@/*": ["src/*"]
     },
+    "types": [], // <== disables automatic type discovery
     "rootDir": ".",
     "outDir": "dist"
   },
   "include": ["src", "main.ts"],
-  "exclude": ["node_modules", "dist", "**/*.js"]
+  "exclude": ["node_modules", "dist", "**/*.js", "**/__tests__"]
 }
