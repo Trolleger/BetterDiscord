@@ -1,13 +1,22 @@
-PLEASE USE POWERSHELL FOR ALL THESE COMMANDS! IDK ITS AUTISTIC! NOT BASH, POWERSHELL WHEN CODING IN THIS IF YOU ARE USING WINDOWS PLEASE USE POWERSHELL!!!!!
+From now on you have to use Linux, if you are using windows use Ubuntu linux. (at least that's what we are doing) -Andrew
 
 # Step into the container
 docker exec -it cockroachdb ./cockroach sql --certs-dir=/cockroach/certs --user=root
 
 FOR NORMAL DOCKER-COMPOSE.yml On POWERSHELL
-docker-compose down; docker-compose up -d
+docker compose down; docker compose up -d
+
+docker compose up -d --build --force-recreate backend
+
+
+
 
 # DROP DATABASE AND REMAKE. WARNING! WILL DROP ALL INFO!
 docker exec -it backend mix ecto.drop; docker exec -it backend mix ecto.create; docker exec -it backend mix ecto.migrate
+
+
+
+
 
 FOR DEV!
 docker-compose -f docker-compose-dev.yml up -d --build
