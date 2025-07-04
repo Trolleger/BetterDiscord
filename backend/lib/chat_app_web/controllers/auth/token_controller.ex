@@ -1,17 +1,27 @@
 defmodule ChatAppWeb.Auth.TokenController do
   use ChatAppWeb, :controller
-# Defines the module. It lives under your /auth/ path, grouped with all your other auth stuff.
+  # This controller handles auth token actions under /api/socket-token
+
+  @doc """
+  GET /api/socket-token
+  Returns a Phoenix.Token signed for socket authentication if user is authenticated.
+  If no authenticated user found, responds with 401 Unauthorized.
+  """
   def socket(conn, _params) do
-      # Turns this file into a controller and gives it access to controller functions
-    case conn.assigns[:current_user] do
-      # The action, it is mapped to something like GET /api/socket-token. (May be something different infuture)
+    # Fetch the currently authenticated user from Guardian pipeline
+    user = Guardian.Plug.current_resource(conn)
+
+    case user do
       nil ->
-        # If no user, deny access
+        # No authenticated user, deny access
         conn |> send_resp(401, "unauthorized")
+
       user ->
+        # Sign a Phoenix.Token scoped for user socket with user ID
         token = Phoenix.Token.sign(conn, "user socket", user.id)
+
+        # Respond with the token as JSON
         json(conn, %{token: token})
-        # Otherwise we sign a new token scoped to "user socket" with the user's ID. That’s what we’ll send to the socket.
     end
   end
 end
