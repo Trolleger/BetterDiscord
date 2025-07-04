@@ -13,4 +13,4 @@ socket.onOpen(() => console.log("Socket connected"));
 socket.onError(() => console.error("Socket error"));
 socket.onClose(() => console.log("Socket closed"));
 
-export { socket };
+export default socket;
