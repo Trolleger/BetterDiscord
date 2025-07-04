@@ -2,6 +2,7 @@ defmodule ChatApp.Accounts do
   @moduledoc """
   Handles user registration, authentication, OAuth linking, and username updates.
   """
+
   import Ecto.Query, warn: false
   alias ChatApp.Repo
   alias ChatApp.Auth.User
@@ -53,18 +54,23 @@ defmodule ChatApp.Accounts do
     end
   end
 
-  # Better email validation than just checking for "@"
+  # Helper: Basic email validation regex
   defp is_valid_email?(string) do
     email_regex = ~r/^[^\s]+@[^\s]+\.[^\s]+$/
     String.match?(string, email_regex)
   end
 
-  # Get user by email
+  # Get user by email safely
   def get_by_email(email) when is_binary(email) do
     Repo.get_by(User, email: email)
   end
 
-  # Get user by ID, raise if not found
+  # Get user by ID safely — returns nil if not found, no crash
+  def get_by_id(id) do
+    Repo.get(User, id)
+  end
+
+  # Get user by ID but crashes if not found (existing)
   def get_by_id!(id) do
     Repo.get!(User, id)
   end

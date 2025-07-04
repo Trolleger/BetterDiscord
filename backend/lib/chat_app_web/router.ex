@@ -34,6 +34,8 @@ defmodule ChatAppWeb.Router do
     delete "/logout", Auth.SessionController, :logout
   end
 
+
+    # Future oauth shit
   scope "/", ChatAppWeb do
     pipe_through [:api, :oauth]
     get "/auth/:provider", AuthController, :request
@@ -44,5 +46,6 @@ defmodule ChatAppWeb.Router do
     pipe_through [:api, :auth]
     get "/profile", AuthController, :profile
     post "/complete-profile", AuthController, :complete_profile
+    get "/socket-token", Auth.TokenController, :socket
   end
 end
