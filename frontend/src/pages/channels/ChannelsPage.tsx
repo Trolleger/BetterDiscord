@@ -3,12 +3,12 @@ import { useAuth } from '../../features/auth/auth';
 import DOMPurify from 'dompurify';
 import { useEffect } from 'react';
 // @ts-ignore
-import socket from '../../helpers/socket/socket.js';
+import { socket, channel } from '../../helpers/socket/socket.js';
 
-// Extend Window interface so TS knows about window.socket
 declare global {
   interface Window {
     socket: typeof socket;
+    channel: typeof channel;
   }
 }
 
@@ -22,7 +22,8 @@ export function ChannelsPage() {
   useEffect(() => {
     console.log('Socket connected:', socket.isConnected());
     console.log('Socket state:', socket.connectionState());
-    window.socket = socket;  // No TS error now
+    window.socket = socket;
+    window.channel = channel;
   }, []);
 
   return (
@@ -46,7 +47,12 @@ export function ChannelsPage() {
         ) : (
           <p>You're viewing server: {sanitizedId}</p>
         )}
+
+        <div id="messages" role="log" aria-live="polite"></div>
+        <input id="chat-input" type="text"></input>
       </main>
     </div>
   );
 }
+// DO NOT REMOVE THIS TODO.
+// TODO: Make chat into a component
