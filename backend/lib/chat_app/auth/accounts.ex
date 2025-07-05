@@ -1,21 +1,24 @@
 defmodule ChatApp.Accounts do
   @moduledoc """
-  Handles user registration, authentication, OAuth linking, and username updates.
+  Handles user registration, authentication, OAuth linking, username updates,
+  and refresh token management.
   """
 
   import Ecto.Query, warn: false
   alias ChatApp.Repo
-  alias ChatApp.Auth.User
+  alias ChatApp.Auth.{User, RefreshToken}
   alias Bcrypt
 
-  # Creates a new user with registration params
+  @refresh_token_ttl_days 30
+
+  # Create user with registration changeset
   def create_user(attrs) do
     %User{}
     |> User.registration_changeset(attrs)
     |> Repo.insert()
   end
 
-  # Authenticates user by email and password
+  # Authenticate by email and password
   def authenticate_user(email, plain_password) do
     case get_by_email(email) do
       nil ->
@@ -30,12 +33,13 @@ defmodule ChatApp.Accounts do
     end
   end
 
-  # Authenticates user by email OR username
+  # Authenticate by login (email or username) and password
   def authenticate_user_by_login(email_or_username, password) do
     user =
-      case is_valid_email?(email_or_username) do
-        true -> Repo.get_by(User, email: email_or_username)
-        false -> Repo.get_by(User, username: email_or_username)
+      if is_valid_email?(email_or_username) do
+        Repo.get_by(User, email: email_or_username)
+      else
+        Repo.get_by(User, username: email_or_username)
       end
 
     case user do
@@ -54,28 +58,21 @@ defmodule ChatApp.Accounts do
     end
   end
 
-  # Helper: Basic email validation regex
+  # Basic email format validation
   defp is_valid_email?(string) do
-    email_regex = ~r/^[^\s]+@[^\s]+\.[^\s]+$/
-    String.match?(string, email_regex)
+    Regex.match?(~r/^[^\s]+@[^\s]+\.[^\s]+$/, string)
   end
 
-  # Get user by email safely
+  # Fetch user by email
   def get_by_email(email) when is_binary(email) do
     Repo.get_by(User, email: email)
   end
 
-  # Get user by ID safely — returns nil if not found, no crash
-  def get_by_id(id) do
-    Repo.get(User, id)
-  end
+  # Fetch user by id (safe and bang versions)
+  def get_by_id(id), do: Repo.get(User, id)
+  def get_by_id!(id), do: Repo.get!(User, id)
 
-  # Get user by ID but crashes if not found (existing)
-  def get_by_id!(id) do
-    Repo.get!(User, id)
-  end
-
-  # Find or create user via OAuth data
+  # Get or create user by OAuth provider data
   def get_or_create_oauth_user(%{
         email: email,
         provider: provider,
@@ -109,10 +106,59 @@ defmodule ChatApp.Accounts do
     end
   end
 
-  # Update username for a user
+  # Update username
   def update_username(%User{} = user, attrs) do
     user
     |> User.username_changeset(attrs)
     |> Repo.update()
+  end
+
+  # --- REFRESH TOKEN FUNCTIONS ---
+
+  # Hash refresh token with sha256 + base64
+  defp hash_token(token) do
+    :crypto.hash(:sha256, token) |> Base.encode64()
+  end
+
+  # Create and store refresh token with expiration
+  def create_refresh_token(user, token, expires_at \\ nil) do
+    expires_at =
+      expires_at ||
+        DateTime.utc_now()
+        |> DateTime.add(@refresh_token_ttl_days * 86400, :second)
+
+    %RefreshToken{}
+    |> RefreshToken.changeset(%{
+      user_id: user.id,
+      token_hash: hash_token(token),
+      expires_at: expires_at
+    })
+    |> Repo.insert()
+  end
+
+  # Get a valid, not revoked, non-expired refresh token
+  def get_valid_refresh_token(token) do
+    token_hash = hash_token(token)
+
+    Repo.one(
+      from rt in RefreshToken,
+        where:
+          rt.token_hash == ^token_hash and
+            rt.revoked == false and
+            rt.expires_at > ^DateTime.utc_now(),
+        preload: [:user]
+    )
+  end
+
+  # Revoke refresh token by setting revoked: true
+  def revoke_refresh_token(token) do
+    token_hash = hash_token(token)
+
+    from(rt in RefreshToken, where: rt.token_hash == ^token_hash)
+    |> Repo.update_all(set: [revoked: true])
+    |> case do
+      {count, _} when count > 0 -> {:ok, count}
+      _ -> {:error, :not_found}
+    end
   end
 end

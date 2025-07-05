@@ -1,0 +1,12 @@
+HTTP/1.1 401 Unauthorized
+cache-control: max-age=0, private, must-revalidate
+content-length: 29
+content-security-policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'
+content-type: application/json; charset=utf-8
+date: Sat, 05 Jul 2025 00:42:10 GMT
+server: Cowboy
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+x-content-type-options: nosniff
+x-frame-options: DENY
+x-request-id: GE80KW00MmePpEsAAAKi
+
