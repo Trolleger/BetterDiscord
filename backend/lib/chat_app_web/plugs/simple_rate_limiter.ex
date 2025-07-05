@@ -1,35 +1,34 @@
-defmodule ChatAppWeb.Plugs.SimpleRateLimiter do
-  import Plug.Conn
+# defmodule ChatApp.Application do
+#   use Application
 
-  @limit 5
-  @window_ms 60_000
+#   @impl true
+#   def start(_type, _args) do
+#     children = [
+#       ChatApp.Repo,
+#       {DNSCluster, query: Application.get_env(:chat_app, :dns_cluster_query) || :ignore},
+#       {Phoenix.PubSub, name: ChatApp.PubSub},
+#       # Start the Finch HTTP client for sending emails
+#       {Finch, name: ChatApp.Finch},
+#       # Start the Endpoint (http/https)
+#       ChatAppWeb.Endpoint,
+#       # Start a worker by calling: ChatApp.Worker.start_link(arg)
+#       # {ChatApp.Worker, arg}
+#     ]
 
-  # We keep a map in process dictionary with {ip, timestamp} => count
-  def init(opts), do: opts
+#     # Initialize ETS table for rate limiting
+#     :ets.new(:rate_limit_table, [:named_table, :public, :set])
 
-  def call(conn, _opts) do
-    ip = Tuple.to_list(conn.remote_ip) |> Enum.join(".")
-    now = System.system_time(:millisecond)
+#     # See https://hexdocs.pm/elixir/Supervisor.html
+#     # for other strategies and supported options
+#     opts = [strategy: :one_for_one, name: ChatApp.Supervisor]
+#     Supervisor.start_link(children, opts)
+#   end
 
-    key = {ip, div(now, @window_ms)}
-
-    count = get_count(key)
-    if conn.request_path in ["/api/login", "/api/refresh"] and conn.method == "POST" and count >= @limit do
-      conn
-      |> send_resp(429, "Too many requests")
-      |> halt()
-    else
-      increment_count(key)
-      conn
-    end
-  end
-
-  defp get_count(key) do
-    Process.get(key, 0)
-  end
-
-  defp increment_count(key) do
-    count = get_count(key) + 1
-    Process.put(key, count)
-  end
-end
+#   # Tell Phoenix to update the endpoint configuration
+#   # whenever the application is updated.
+#   @impl true
+#   def config_change(changed, _new, removed) do
+#     ChatAppWeb.Endpoint.config_change(changed, removed)
+#     :ok
+#   end
+# end

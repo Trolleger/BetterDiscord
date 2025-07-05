@@ -3,7 +3,6 @@ defmodule ChatAppWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug ChatAppWeb.Plugs.SimpleRateLimiter  # Rate limiting plug, adjust logic inside plug
   end
 
   # Full auth pipeline, requires valid access token

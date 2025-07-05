@@ -46,6 +46,8 @@ defmodule ChatApp.MixProject do
       {:ueberauth, "~> 0.10"},
       {:plug_cowboy, "~> 2.6"},
       {:guardian, "~> 2.0"},
+      # Add Redis client
+      # Add Redis connection pool
       {:guardian_db, "~> 3.0"},
       {:plug_attack, "~> 0.4"},
       {:hackney, "~> 1.9"},

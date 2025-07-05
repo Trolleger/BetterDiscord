@@ -1,6 +1,5 @@
 defmodule ChatAppWeb.Auth.SessionController do
   use ChatAppWeb, :controller
-
   alias ChatApp.Guardian
   alias ChatApp.Accounts
   alias ChatApp.Auth.RefreshToken
@@ -13,7 +12,6 @@ defmodule ChatAppWeb.Auth.SessionController do
         conn
         |> put_status(:created)
         |> json(%{id: user.id, email: user.email, username: user.username})
-
       {:error, changeset} ->
         conn
         |> put_status(:bad_request)
