@@ -4,17 +4,19 @@ defmodule ChatApp.Guardian.AuthPipeline.Optional do
     module: ChatApp.Guardian,
     error_handler: ChatApp.Guardian.AuthErrorHandler
 
-  # Verify JWT from Authorization header, expect "access" token type
+  # Verify JWT from Authorization header, expect "access" token type, don't halt if missing
   plug Guardian.Plug.VerifyHeader,
     claims: %{typ: "access"},
-    scheme: "Bearer"
+    scheme: "Bearer",
+    halt: false
 
-  # Check session cookie for access token as fallback
+  # Check session cookie for access token as fallback, don't halt if missing
   plug Guardian.Plug.VerifySession,
-    claims: %{typ: "access"}
+    claims: %{typ: "access"},
+    halt: false
 
-  # Load the user resource if token is valid
-  plug Guardian.Plug.LoadResource
+  # Load the user resource if token is valid, allow blank (no user)
+  plug Guardian.Plug.LoadResource, allow_blank: true
 
-  # NO EnsureAuthenticated here — allows optional auth for public or refresh routes
+  # No EnsureAuthenticated here — allows optional auth for public or refresh routes
 end

@@ -47,7 +47,7 @@ defmodule ChatApp.MixProject do
       {:plug_cowboy, "~> 2.6"},
       {:guardian, "~> 2.0"},
       {:guardian_db, "~> 3.0"},
-      {:plug_attack, "~> 0.4.2"},
+      {:plug_attack, "~> 0.4"},
       {:hackney, "~> 1.9"},
       # TODO: Later on add all the guardian_db functionality, for now we will just be using plain simple guardian
       {:ueberauth_google, "~> 0.12"},

@@ -3,14 +3,27 @@ defmodule ChatAppWeb.Auth.SessionController do
 
   alias ChatApp.Guardian
   alias ChatApp.Accounts
-  alias Plug.Conn
+  alias ChatApp.Auth.RefreshToken
 
-  @doc """
-  POST /api/login
-  Expects JSON %{ "login" => login, "password" => pwd }.
-  On success sets access token, refresh token cookie, stores refresh token in DB.
-  """
-  def login(conn, %{"login" => login, "password" => password}) do
+  # POST /api/register
+  # Expects JSON %{ "user" => %{ email, username, password } }
+  def register(conn, %{"user" => user_params}) do
+    case Accounts.create_user(user_params) do
+      {:ok, user} ->
+        conn
+        |> put_status(:created)
+        |> json(%{id: user.id, email: user.email, username: user.username})
+
+      {:error, changeset} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{errors: Ecto.Changeset.traverse_errors(changeset, &translate_error/1)})
+    end
+  end
+
+  # POST /api/login
+  # Expects JSON %{ "user" => %{ login, password } }
+  def login(conn, %{"user" => %{"login" => login, "password" => password}}) do
     with {:ok, user} <- Accounts.authenticate_user_by_login(login, password),
          {:ok, access_token, _} <- Guardian.encode_and_sign(user, %{typ: "access"}),
          {:ok, refresh_token, _} <- Guardian.encode_and_sign(user, %{typ: "refresh"}, token_ttl: {30, :days}),
@@ -29,14 +42,9 @@ defmodule ChatAppWeb.Auth.SessionController do
     end
   end
 
-  @doc """
-  POST /api/refresh
-  Uses refresh token from cookie or JSON params.
-  Issues new tokens, revokes old refresh token, stores new one.
-  """
+  # POST /api/refresh
   def refresh(conn, params) do
     conn = fetch_cookies(conn)
-
     token = conn.cookies["refresh_token"] || Map.get(params, "refresh_token")
 
     if is_nil(token) do
@@ -60,15 +68,10 @@ defmodule ChatAppWeb.Auth.SessionController do
     end
   end
 
-  @doc """
-  DELETE /api/logout
-  Revokes refresh token server-side and clears cookie client-side.
-  """
+  # DELETE /api/logout
   def logout(conn, _params) do
     conn = fetch_cookies(conn)
-    token = conn.cookies["refresh_token"]
-
-    if token, do: Accounts.revoke_refresh_token(token)
+    if token = conn.cookies["refresh_token"], do: Accounts.revoke_refresh_token(token)
 
     conn
     |> delete_resp_cookie("refresh_token")
@@ -90,5 +93,11 @@ defmodule ChatAppWeb.Auth.SessionController do
     conn
     |> put_status(:internal_server_error)
     |> json(%{error: "Internal server error"})
+  end
+
+  defp translate_error({msg, opts}) do
+    Enum.reduce(opts, msg, fn {key, val}, acc ->
+      String.replace(acc, "%{#{key}}", to_string(val))
+    end)
   end
 end
