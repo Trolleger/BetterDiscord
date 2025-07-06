@@ -27,7 +27,7 @@ defmodule ChatApp.MixProject do
 
   defp deps do
     [
-      {:phoenix, "~> 1.7.14"},
+      {:phoenix, "~> 1.7.21"},
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
@@ -45,13 +45,10 @@ defmodule ChatApp.MixProject do
       {:phoenix_live_reload, "~> 1.4", only: :dev},
       {:ueberauth, "~> 0.10"},
       {:plug_cowboy, "~> 2.6"},
-      {:guardian, "~> 2.0"},
-      # Add Redis client
-      # Add Redis connection pool
+      {:guardian, "~> 2.3.2"},
       {:guardian_db, "~> 3.0"},
       {:plug_attack, "~> 0.4"},
       {:hackney, "~> 1.9"},
-      # TODO: Later on add all the guardian_db functionality, for now we will just be using plain simple guardian
       {:ueberauth_google, "~> 0.12"},
       {:bcrypt_elixir, "~> 2.0"}
     ]

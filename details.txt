@@ -3,6 +3,9 @@ From now on you have to use Linux, if you are using windows use Ubuntu linux. (a
 # Step into the container
 docker exec -it cockroachdb ./cockroach sql --certs-dir=/cockroach/certs --user=root
 
+This or any variation thereof should work with migrations
+docker compose run --rm backend mix ecto.reset
+
 FOR NORMAL DOCKER-COMPOSE.yml On POWERSHELL
 docker compose down; docker compose up -d
 
