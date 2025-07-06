@@ -4,6 +4,8 @@ defmodule ChatApp.Guardian.AuthPipeline.Optional do
     module: ChatApp.Guardian,
     error_handler: ChatApp.Guardian.AuthErrorHandler
 
+  require Logger
+
   # Verify JWT from Authorization header, expect "access" token type, don't halt if missing
   plug Guardian.Plug.VerifyHeader,
     claims: %{typ: "access"},

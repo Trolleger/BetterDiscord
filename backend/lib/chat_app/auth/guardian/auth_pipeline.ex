@@ -4,6 +4,8 @@ defmodule ChatApp.Guardian.AuthPipeline do
     module: ChatApp.Guardian,
     error_handler: ChatApp.Guardian.AuthErrorHandler
 
+  require Logger
+
   # Log incoming claims to inspect them
   plug :log_claims
 
