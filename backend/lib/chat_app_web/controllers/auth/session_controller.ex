@@ -12,6 +12,7 @@ defmodule ChatAppWeb.Auth.SessionController do
         conn
         |> put_status(:created)
         |> json(%{id: user.id, email: user.email, username: user.username})
+
       {:error, changeset} ->
         conn
         |> put_status(:bad_request)
@@ -24,15 +25,20 @@ defmodule ChatAppWeb.Auth.SessionController do
   def login(conn, %{"user" => %{"login" => login, "password" => password}}) do
     with {:ok, user} <- Accounts.authenticate_user_by_login(login, password),
          {:ok, access_token, _} <- Guardian.encode_and_sign(user, %{typ: "access"}),
-         {:ok, refresh_token, _} <- Guardian.encode_and_sign(user, %{typ: "refresh"}, token_ttl: {30, :days}),
+         {:ok, refresh_token, _} <-
+           Guardian.encode_and_sign(user, %{typ: "refresh"}, token_ttl: {30, :days}),
          {:ok, _} <- Accounts.create_refresh_token(user, refresh_token) do
       conn
       |> put_resp_cookie("refresh_token", refresh_token,
         http_only: true,
         secure: secure_cookie?(conn),
         same_site: "Lax",
-        max_age: 2_592_000)
-      |> json(%{access_token: access_token, user: %{id: user.id, email: user.email, username: user.username}})
+        max_age: 2_592_000
+      )
+      |> json(%{
+        access_token: access_token,
+        user: %{id: user.id, email: user.email, username: user.username}
+      })
     else
       {:error, :user_not_found} -> unauthorized(conn)
       {:error, :invalid_password} -> unauthorized(conn)
@@ -50,7 +56,8 @@ defmodule ChatAppWeb.Auth.SessionController do
     else
       with %RefreshToken{user: user} <- Accounts.get_valid_refresh_token(token),
            {:ok, new_access, _} <- Guardian.encode_and_sign(user, %{typ: "access"}),
-           {:ok, new_refresh, _} <- Guardian.encode_and_sign(user, %{typ: "refresh"}, token_ttl: {30, :days}),
+           {:ok, new_refresh, _} <-
+             Guardian.encode_and_sign(user, %{typ: "refresh"}, token_ttl: {30, :days}),
            {:ok, _} <- Accounts.revoke_refresh_token(token),
            {:ok, _} <- Accounts.create_refresh_token(user, new_refresh) do
         conn
@@ -58,7 +65,8 @@ defmodule ChatAppWeb.Auth.SessionController do
           http_only: true,
           secure: secure_cookie?(conn),
           same_site: "Lax",
-          max_age: 2_592_000)
+          max_age: 2_592_000
+        )
         |> json(%{access_token: new_access})
       else
         _ -> unauthorized(conn)

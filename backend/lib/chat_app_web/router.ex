@@ -21,7 +21,8 @@ defmodule ChatAppWeb.Router do
     get "/health_check", HealthcheckController, :index
     post "/register", Auth.SessionController, :register
     post "/login", Auth.SessionController, :login
-    delete "/logout", Auth.SessionController, :logout  # No auth needed to clear cookie
+    # No auth needed to clear cookie
+    delete "/logout", Auth.SessionController, :logout
   end
 
   scope "/api", ChatAppWeb do
