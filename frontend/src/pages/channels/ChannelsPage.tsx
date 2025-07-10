@@ -1,5 +1,5 @@
-import { useAuth } from '../../features/auth/auth';
-import { Chat } from '../../components/chat/chat';
+import { useAuth } from '../../features/auth/auth_context.js';
+import { Chat } from '../../components/chat/chat.js';
 
 export function ChannelsPage() {
   const { user, logout } = useAuth();

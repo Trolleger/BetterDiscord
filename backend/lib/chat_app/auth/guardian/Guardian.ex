@@ -1,4 +1,3 @@
-# lib/chat_app/guardian.ex
 defmodule ChatApp.Guardian do
   use Guardian, otp_app: :chat_app
   alias ChatApp.Accounts
@@ -14,5 +13,12 @@ defmodule ChatApp.Guardian do
       nil -> {:error, :resource_not_found}
       user -> {:ok, user}
     end
+  end
+
+  @impl true
+  def build_claims(claims, _resource, _opts) do
+    # Ensures the "typ" claim (like "access" or "refresh") is included in the token
+    claims = Map.put(claims, "typ", claims["typ"] || "access")
+    {:ok, claims}
   end
 end
