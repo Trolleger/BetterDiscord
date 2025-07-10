@@ -45,6 +45,7 @@ defmodule ChatApp.MixProject do
       {:phoenix_live_reload, "~> 1.4", only: :dev},
       {:ueberauth, "~> 0.10"},
       {:plug_cowboy, "~> 2.6"},
+      {:oban, "~> 2.17"},
       {:guardian, "~> 2.3.2"},
       {:guardian_db, "~> 3.0"},
       {:plug_attack, "~> 0.4"},
