@@ -20,7 +20,7 @@ defmodule ChatAppWeb.RoomChannel do
   #   - payload: the data sent by the client (e.g., %{"body" => "hi"})
   #   - socket: holds topic/assigns and lets us reply or broadcast
   def handle_in("new_msg", %{"body" => body}, socket) do
-    broadcast_from!(socket, "new_msg", %{body: body})
+    broadcast!(socket, "new_msg", %{body: body})
     {:noreply, socket}
   end
 end
