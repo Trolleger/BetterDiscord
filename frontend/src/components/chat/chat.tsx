@@ -1,155 +1,182 @@
 import React, { useEffect, useState, useRef } from 'react';
-import DOMPurify from 'dompurify';
+import remarkBreaks from 'remark-breaks';
+import ReactMarkdown from 'react-markdown';
 // @ts-ignore
 import { connectSocket } from '../../features/chat/socket/user_socket';
 
 interface Message {
- body: string;
- timestamp: string;
- stylingEnabled: boolean;
+  body: string;
+  timestamp: string;
 }
 
-const ALLOWED_STYLES = ['color', 'font-weight', 'background-color', 'text-decoration', 'font-style'];
-
 export function Chat() {
- // Refs and state
- const messagesEndRef = useRef<HTMLDivElement>(null);
- const containerRef = useRef<HTMLDivElement>(null);
- const channelRef = useRef<any>(null);
- const socketRef = useRef<any>(null);
- const [messages, setMessages] = useState<Message[]>([]);
- const [input, setInput] = useState('');
- const [allowStyling, setAllowStyling] = useState(false);
- const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  // Refs and state
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const channelRef = useRef<any>(null);
+  const socketRef = useRef<any>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
 
- // 2. AUTO-DISMISS ALERTS
- useEffect(() => {
-   if (alertMessage) {
-     const timer = setTimeout(() => setAlertMessage(null), 3000);
-     return () => clearTimeout(timer);
-   }
- }, [alertMessage]);
+  // Socket logic
+  useEffect(() => {
+    let isMounted = true;
 
- // 3. SOCKET LOGIC (UNCHANGED)
- useEffect(() => {
-   let isMounted = true;
-   const initSocket = async () => {
-     if (socketRef.current) return;
-     const socket = await connectSocket(localStorage.getItem('access_token'));
-     if (!socket || !isMounted) return;
+    const initSocket = async () => {
+      if (socketRef.current) return;
 
-     const channel = socket.channel("room:lobby", {});
-     channel.on("new_msg", (payload: { body: string }) => {
-       setMessages(prev => [...prev, {
-         body: payload.body,
-         timestamp: new Date().toLocaleTimeString(),
-         stylingEnabled: allowStyling
-       }]);
-     });
+      const jwtAccessToken = localStorage.getItem('access_token');
+      if (!jwtAccessToken) {
+        console.error('No access token found');
+        return;
+      }
 
-     channelRef.current = channel;
-     socketRef.current = socket;
-   };
+      const socket = await connectSocket(jwtAccessToken);
+      if (!socket || !isMounted) return;
 
-   initSocket();
-   return () => {
-     isMounted = false;
-     channelRef.current?.leave();
-     socketRef.current?.disconnect();
-   };
- }, [allowStyling]);
+      socketRef.current = socket;
+      const channel = socket.channel("room:lobby", {});
 
- // 4. MESSAGE SENDING WITH STYLE BLOCKING
- const sendMessage = () => {
-   if (!input.trim() || !channelRef.current) return;
+      channel.join()
+        .receive("ok", () => console.log("Joined lobby"))
+        .receive("error", (err: any) => console.error("Unable to join lobby", err));
 
-   let clean = input.trim();
-   
-   if (allowStyling) {
-     const blocked: string[] = [];
-     const temp = document.createElement('div');
-     temp.innerHTML = input.trim();
-     
-     temp.querySelectorAll('[style]').forEach(el => {
-       const styleAttr = el.getAttribute('style') || '';
-       const allowedStyles: string[] = [];
-       
-       styleAttr.split(';').forEach(decl => {
-         const [prop, value] = decl.split(':').map(s => s.trim());
-         if (prop && value) {
-           if (ALLOWED_STYLES.includes(prop.toLowerCase())) {
-             allowedStyles.push(decl);
-           } else {
-             blocked.push(prop.toLowerCase());
-           }
-         }
-       });
-       
-       el.setAttribute('style', allowedStyles.join(';'));
-     });
-     
-     clean = temp.innerHTML;
-     
-     if (blocked.length) {
-       setAlertMessage(`Blocked styles: ${[...new Set(blocked)].join(', ')}`);
-     }
-   }
+      channel.on("new_msg", (payload: { body: string }) => {
+        if (!isMounted) return;
 
-   // Send message
-   setMessages(prev => [...prev, {
-     body: clean,
-     timestamp: new Date().toLocaleTimeString(),
-     stylingEnabled: allowStyling
-   }]);
-   channelRef.current.push("new_msg", { body: clean });
-   setInput('');
- };
+        setMessages(prev => [...prev, {
+          body: payload.body,
+          timestamp: new Date().toLocaleTimeString()
+        }]);
+      });
 
- // 5. RENDER
- return (
-   <div style={{ maxWidth: 600, margin: '0 auto', padding: 16 }}>
-     <div
-       ref={containerRef}
-       style={{ height: 400, overflowY: 'auto', border: '1px solid #ddd', padding: 10 }}
-     >
-       {messages.map((msg, i) => (
-         <div key={i}>
-           {msg.stylingEnabled ? (
-             <span dangerouslySetInnerHTML={{ __html: msg.body }} />
-           ) : (
-             <span>{msg.body}</span>
-           )}
-         </div>
-       ))}
-       <div ref={messagesEndRef} />
-     </div>
+      channelRef.current = channel;
+    };
 
-     {alertMessage && (
-       <div style={{ background: '#fee', padding: 8, margin: '8px 0' }}>
-         {alertMessage}
-       </div>
-     )}
+    initSocket();
 
-     <input
-       type="text"
-       value={input}
-       onChange={(e) => setInput(e.target.value)}
-       onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-       style={{ width: '100%', padding: 8 }}
-     />
+    return () => {
+      isMounted = false;
+      if (channelRef.current) {
+        channelRef.current.leave();
+        channelRef.current = null;
+      }
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, []);
 
-     <button
-       onClick={() => setAllowStyling(!allowStyling)}
-       style={{
-         display: 'block',
-         marginTop: 8,
-         padding: 8,
-         background: allowStyling ? '#4CAF50' : '#f44336',
-         color: 'white'
-       }}
-     >
-       {allowStyling ? 'Styled Mode' : 'Plain Mode'}
-     </button>
-   </div>
- );
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const sendMessage = () => {
+    if (!input.trim() || !channelRef.current) return;
+
+    channelRef.current.push("new_msg", { body: input.trim() });
+    setInput('');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: 600, margin: '0 auto', padding: 16 }}>
+      <div
+        ref={containerRef}
+        style={{
+          height: 400,
+          overflowY: 'auto',
+          border: '1px solid #ddd',
+          padding: 10,
+          backgroundColor: '#f9f9f9'
+        }}
+      >
+        {messages.map((msg, i) => (
+          <div key={i} style={{ marginBottom: 12 }}>
+            <div style={{
+              lineHeight: 1.4,
+              fontSize: 14
+            }}>
+              <ReactMarkdown
+                remarkPlugins={[remarkBreaks]}
+                components={{
+                  p: ({ children }) => <span>{children}</span>,
+                  code: ({ children }) => (
+                    <code style={{
+                      backgroundColor: '#f4f4f4',
+                      padding: '2px 4px',
+                      borderRadius: '3px',
+                      fontFamily: 'monospace'
+                    }}>
+                      {children}
+                    </code>
+                  ),
+                  pre: ({ children }) => (
+                    <pre style={{
+                      backgroundColor: '#f4f4f4',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      overflow: 'auto',
+                      margin: '4px 0'
+                    }}>
+                      {children}
+                    </pre>
+                  )
+                }}
+              >
+                {msg.body}
+              </ReactMarkdown>
+
+            </div>
+            <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+              {msg.timestamp}
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div style={{ marginTop: 8, fontSize: 12, color: '#666' }}>
+        Supports full markdown: **bold**, *italic*, `code`, ```code blocks```, links, lists, etc.
+      </div>
+
+      <textarea
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Type markdown... (Shift+Enter for new line)"
+        style={{
+          width: '100%',
+          padding: 8,
+          marginTop: 4,
+          minHeight: 80,
+          resize: 'vertical',
+          fontFamily: 'inherit'
+        }}
+      />
+
+      <button
+        onClick={sendMessage}
+        disabled={!input.trim()}
+        style={{
+          marginTop: 8,
+          padding: 8,
+          backgroundColor: input.trim() ? '#4CAF50' : '#ccc',
+          color: 'white',
+          border: 'none',
+          borderRadius: 4
+        }}
+      >
+        Send
+      </button>
+    </div>
+  );
 }
