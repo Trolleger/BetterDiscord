@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
+
 import remarkBreaks from 'remark-breaks';
+import remarkGfm from 'remark-gfm';
 import ReactMarkdown from 'react-markdown';
 // @ts-ignore
 import { connectSocket } from '../../features/chat/socket/user_socket';
@@ -106,7 +108,7 @@ export function Chat() {
               fontSize: 14
             }}>
               <ReactMarkdown
-                remarkPlugins={[remarkBreaks]}
+                remarkPlugins={[remarkBreaks, remarkGfm]}
                 components={{
                   p: ({ children }) => <span>{children}</span>,
                   code: ({ children }) => (
