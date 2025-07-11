@@ -1,5 +1,6 @@
 FROM elixir:1.18.0-otp-27-alpine
 # TODO: Update in the future it to OTP-28, for now it has to be on 27 to not get the whole  ArgumentError: cannot escape #Reference<0.471469035.1944977410.66011>. The supported values are: lists, tuples, maps, atoms, numbers, bitstrings, PIDs and remote functions in the format &Mod.fun/arity error. So be careful! just please check it in the future, maybe like a year from now of writing this was written on. 2025-7-6
+
 RUN apk add --no-cache build-base git nodejs npm postgresql-client inotify-tools
 
 WORKDIR /app

@@ -1,60 +1,27 @@
-# dont add no version nonsense
-
 services:
-  cockroach-init:
-    image: alpine:latest
-    container_name: cockroach-init
-    volumes:
-      - ./certs:/certs  # No :ro, so it's read-write
-    command: >
-      sh -c "chmod 600 /certs/*.key && chmod 644 /certs/ca.crt /certs/client.root.crt"
-    restart: "no"
-
-  cockroachdb:
-    image: cockroachdb/cockroach:v24.3.14
-    container_name: cockroachdb
-    command:
-      - start-single-node
-      - --certs-dir=/cockroach/certs
-      - --advertise-addr=cockroachdb:26257
-      - --http-addr=0.0.0.0:8080
-      - --max-offset=5s
-    depends_on:
-      cockroach-init:
-        condition: service_completed_successfully
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    env_file:
+      - ./backend/.env    # <-- add this so postgres gets vars from the backend env file
     environment:
       - TZ=UTC
     volumes:
-      - ./certs:/cockroach/certs:ro
-      - cockroach-data:/cockroach/cockroach-data
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro  # Runs init.sql on first start
     ports:
-      - "26257:26257"
-      - "8080:8080"
+      - "5432:5432"
     networks:
       betterdiscord:
         aliases:
-          - cockroachdb
+          - postgres
     healthcheck:
-      test: ["CMD", "curl", "-f", "--cacert", "/cockroach/certs/ca.crt", "https://127.0.0.1:8080/health?ready=1"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 20
       start_period: 30s
     restart: unless-stopped
-
-  db-init:
-    container_name: db-init
-    image: cockroachdb/cockroach:v24.3.14
-    depends_on:
-      cockroachdb:
-        condition: service_healthy
-    command: ["sql", "--certs-dir=/cockroach/certs", "--host=cockroachdb:26257", "--user=root", "-f", "/init.sql"]
-    volumes:
-      - ./certs:/cockroach/certs:ro
-      - ./init.sql:/init.sql:ro
-    networks:
-      - betterdiscord
-    restart: "no"
 
   backend:
     container_name: backend
@@ -64,8 +31,8 @@ services:
       args:
         - BUILDKIT_INLINE_CACHE=1
     env_file:
-      - ./env/.env
-      - ./backend/.env
+      - ./env/.env            # General env
+      - ./backend/.env        # Backend specific env, including POSTGRES vars
     environment:
       MIX_ENV: "dev"
       PHX_HOST: "0.0.0.0"
@@ -75,14 +42,12 @@ services:
       - ./backend:/app:delegated
       - backend_deps:/app/deps
       - backend_build:/app/_build
-      - ./certs:/certs:ro
+      # ./certs removed because Postgres doesn't need them here
     networks:
       - betterdiscord
     depends_on:
-      cockroachdb:
+      postgres:
         condition: service_healthy
-      db-init:
-        condition: service_completed_successfully
     restart: unless-stopped
 
   betterdiscord-coturn:
@@ -160,7 +125,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  cockroach-data:
+  pgdata:
   backend_deps:
   backend_build:
   mediasoup_modules:

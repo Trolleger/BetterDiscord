@@ -3,10 +3,10 @@ defmodule ChatApp.Repo.Migrations.CreateUsers do
 
   def change do
     # Disable the default auto-incrementing integer primary key that Ecto creates automatically.
-    # We want to use UUIDs as the primary key because CockroachDB handles UUIDs well and they're globally unique.
+    # We want to use UUIDs as the primary key because PostgreSQL handles UUIDs well and they're globally unique.
     create table(:users, primary_key: false) do
       # Add an :id column of type UUID that acts as the primary key.
-      # We set a default value that uses CockroachDB's built-in function gen_random_uuid() to auto-generate UUIDs on insert.
+      # We set a default value that uses Postgres's built-in function gen_random_uuid() to auto-generate UUIDs on insert.
       # This ensures that when you insert a new user, you don't have to supply the ID manually.
       add :id, :uuid, primary_key: true, default: fragment("gen_random_uuid()")
 
@@ -28,10 +28,8 @@ defmodule ChatApp.Repo.Migrations.CreateUsers do
       add :provider_uid, :string, null: true
 
       # Add timestamp columns for record creation and updates.
-      # CockroachDB's Ecto adapter uses "created_at" instead of the default "inserted_at" for the insert timestamp.
-      # To keep Ecto and the database in sync, explicitly set inserted_at: :created_at.
-      # Also set updated_at to :updated_at for clarity and use UTC datetime for consistent timezone handling.
-      timestamps(inserted_at: :created_at, updated_at: :updated_at, type: :utc_datetime)
+      # Use default column names inserted_at and updated_at for PostgreSQL compatibility.
+      timestamps(type: :utc_datetime)
     end
 
     # Create a unique index on the email column to enforce uniqueness at the database level,

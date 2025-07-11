@@ -4,8 +4,14 @@ From now on you have to use Linux, if you are using windows use Ubuntu linux. (a
 docker exec -it cockroachdb ./cockroach sql --certs-dir=/cockroach/certs --user=root
 
 IF YOU NEED TO RUN COMMANDS IN THE CONTAINER WHILE IT IS DOWN:
-docker compose run --rm backend mix ecto.reset
+To reset shit:
+docker compose run --rm backend mix ecto.reset 
+or
+docker compose up -d postgres && docker exec -it postgres psql -U root -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'chat_app' AND pid <> pg_backend_pid();" && docker compose run --rm backend mix ecto.reset
+To Get Deps:
 docker compose run --rm backend mix deps.get
+
+
 
 FOR NORMAL DOCKER-COMPOSE.yml On POWERSHELL
 docker compose down; docker compose up -d

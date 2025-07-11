@@ -5,21 +5,10 @@ if System.get_env("PHX_SERVER") do
   config :chat_app, ChatAppWeb.Endpoint, server: true
 end
 
-# Repo config (CockroachDB + TLS)
+# Repo config (PostgreSQL, no TLS for now)
 config :chat_app, ChatApp.Repo,
   url: System.fetch_env!("DATABASE_URL"),
   pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-  ssl: [
-    cacertfile: System.get_env("SSLROOTCERT") || "/certs/ca.crt",
-    certfile: System.get_env("SSLCERT") || "/certs/client.root.crt",
-    keyfile: System.get_env("SSLKEY") || "/certs/client.root.key",
-    verify: :verify_peer,
-    server_name_indication:
-      case System.get_env("DB_HOST") do
-        nil -> if config_env() == :dev, do: :disable, else: "cockroachdb"
-        host -> host
-      end
-  ],
   migration_primary_key: [type: :uuid],
   migration_foreign_key: [type: :uuid],
   migration_timestamps: [type: :timestamptz, inserted_at: :created_at]

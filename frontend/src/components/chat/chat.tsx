@@ -8,34 +8,7 @@ interface Message {
   timestamp: string;
 }
 
-// Whitelisted CSS properties allowed inside style attributes
 const allowedStyles = ['color', 'font-weight', 'background-color', 'text-decoration', 'font-style'];
-
-// Simple function to clean styles
-const cleanStyles = (htmlContent: string): string => {
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = htmlContent;
-  
-  const styledElements = tempDiv.querySelectorAll('[style]');
-  styledElements.forEach(element => {
-    const style = element.getAttribute('style') || '';
-    const allowedDeclarations = style.split(';')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .filter(decl => {
-        const prop = decl.split(':')[0].trim().toLowerCase();
-        return allowedStyles.includes(prop);
-      });
-    
-    if (allowedDeclarations.length > 0) {
-      element.setAttribute('style', allowedDeclarations.join('; '));
-    } else {
-      element.removeAttribute('style');
-    }
-  });
-  
-  return tempDiv.innerHTML;
-};
 
 export function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -44,22 +17,55 @@ export function Chat() {
   const socketRef = useRef<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [allowStyling, setAllowStyling] = useState(false);
+  const [blockedWarning, setBlockedWarning] = useState<string | null>(null);
+  const blockedItems = useRef<string[]>([]);
+
+  // Setup DOMPurify hook with style whitelist
+  useEffect(() => {
+    const uponSanitizeAttribute = (node: any) => {
+      if (node.attrName === 'style') {
+        const style = node.attrValue;
+        const declarations = style.split(';').map((s: string) => s.trim()).filter(Boolean);
+        
+        const filtered = declarations.filter((decl: string) => {
+          const prop = decl.split(':')[0].trim().toLowerCase();
+          const isAllowed = allowedStyles.includes(prop);
+          if (!isAllowed) blockedItems.current.push(prop);
+          return isAllowed;
+        });
+
+        if (filtered.length > 0) {
+          node.attrValue = filtered.join('; ') + ';';
+        } else {
+          node.removeAttribute('style');
+        }
+      }
+    };
+
+    const uponSanitizeElement = (node: any) => {
+      if (node.tagName === 'SCRIPT') {
+        blockedItems.current.push(`<${node.tagName.toLowerCase()}>`);
+      }
+    };
+
+    DOMPurify.addHook('uponSanitizeAttribute', uponSanitizeAttribute);
+    DOMPurify.addHook('uponSanitizeElement', uponSanitizeElement);
+
+    return () => {
+      DOMPurify.removeHook('uponSanitizeAttribute');
+      DOMPurify.removeHook('uponSanitizeElement');
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
 
     const initSocket = async () => {
       if (socketRef.current) return;
-      
       const jwtAccessToken = localStorage.getItem('access_token');
-      if (!jwtAccessToken) {
-        console.error('No access token found');
-        return;
-      }
-
       const socket = await connectSocket(jwtAccessToken);
-      if (!socket || !isMounted) return;
+      if (!socket) return;
 
       socketRef.current = socket;
       const channel = socket.channel("room:lobby", {});
@@ -70,12 +76,10 @@ export function Chat() {
 
       channel.on("new_msg", (payload: { body: string }) => {
         if (!isMounted) return;
-
-        // Clean styles and sanitize
-        const cleanedContent = cleanStyles(payload.body);
-        const cleanBody = DOMPurify.sanitize(cleanedContent);
-        
-        setMessages(prev => [...prev, { body: cleanBody, timestamp: new Date().toLocaleTimeString() }]);
+        setMessages(prev => [...prev, { 
+          body: payload.body, 
+          timestamp: new Date().toLocaleTimeString() 
+        }]);
       });
 
       channelRef.current = channel;
@@ -96,7 +100,6 @@ export function Chat() {
     };
   }, []);
 
-  // Scroll to bottom when new messages come in
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -107,43 +110,30 @@ export function Chat() {
     }
   }, [messages]);
 
-  // Auto-clear alert after 3 seconds
-  useEffect(() => {
-    if (!alertMessage) return;
-    const timeout = setTimeout(() => setAlertMessage(null), 3000);
-    return () => clearTimeout(timeout);
-  }, [alertMessage]);
-
   const send = () => {
-    if (input.trim() && channelRef.current) {
-      // Check for blocked styles BEFORE sending
-      const rejectedStyles: string[] = [];
-      
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = input.trim();
-      
-      const styledElements = tempDiv.querySelectorAll('[style]');
-      styledElements.forEach(element => {
-        const style = element.getAttribute('style') || '';
-        const declarations = style.split(';').map(s => s.trim()).filter(Boolean);
-        
-        declarations.forEach(decl => {
-          const prop = decl.split(':')[0].trim().toLowerCase();
-          if (!allowedStyles.includes(prop)) {
-            rejectedStyles.push(prop);
-          }
-        });
-      });
+    if (!input.trim() || !channelRef.current) return;
 
-      // Show alert to sender if there are blocked styles
-      if (rejectedStyles.length > 0) {
-        const uniqueRejected = [...new Set(rejectedStyles)];
-        setAlertMessage(`The styles you sent which are blacklisted: ${uniqueRejected.join(', ')}. The rest worked.`);
-      }
+    blockedItems.current = [];
+    const messageToSend = allowStyling ? DOMPurify.sanitize(input.trim()) : input.trim();
 
-      // Send the message
-      channelRef.current.push("new_msg", { body: input.trim() });
-      setInput('');
+    // Only send through socket - the response will add it to messages
+    channelRef.current.push("new_msg", { body: messageToSend });
+    setInput('');
+
+    // Show warning if anything was blocked
+    if (blockedItems.current.length > 0) {
+      setBlockedWarning(`These [${blockedItems.current.join(', ')}] were blocked, rest was sent.`);
+      setTimeout(() => setBlockedWarning(null), 5000);
+    }
+  };
+
+  const renderMessage = (msg: Message) => {
+    if (allowStyling) {
+      return (
+        <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.body) }} />
+      );
+    } else {
+      return <span>{msg.body}</span>;
     }
   };
 
@@ -154,40 +144,62 @@ export function Chat() {
         style={{ height: 400, overflowY: 'auto', border: '1px solid #ccc', padding: 10, backgroundColor: '#f9f9f9' }}
       >
         {messages.map((msg, i) => (
-          <p
-            key={i}
-            dangerouslySetInnerHTML={{ __html: msg.body }}
-          />
+          <p key={i} style={{ margin: '4px 0' }}>
+            {renderMessage(msg)}
+            <small style={{ color: '#666', marginLeft: '8px' }}>{msg.timestamp}</small>
+          </p>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      {alertMessage && (
+      <div style={{ marginTop: 8 }}>
+        <input
+          type="text"
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && send()}
+          placeholder="Type a message..."
+          style={{ width: '100%', padding: 8 }}
+        />
+        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <button 
+            onClick={send} 
+            disabled={!input.trim()} 
+            style={{ flex: 1, padding: 8 }}
+          >
+            Send
+          </button>
+          <button
+            onClick={() => setAllowStyling(!allowStyling)}
+            style={{
+              padding: 8,
+              background: allowStyling ? '#4CAF50' : '#f44336',
+              color: 'white',
+              border: 'none',
+              borderRadius: 4
+            }}
+          >
+            {allowStyling ? 'Styled' : 'Plain'}
+          </button>
+        </div>
+      </div>
+
+      {blockedWarning && (
         <div style={{
-          marginTop: 8,
-          padding: 8,
-          backgroundColor: '#eee',
-          color: '#333',
-          border: '1px solid #ccc',
+          position: 'fixed',
+          bottom: 20,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#ff6b6b',
+          color: 'white',
+          padding: '8px 16px',
           borderRadius: 4,
-          fontSize: 14,
-          fontWeight: 'bold'
+          boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+          zIndex: 1000
         }}>
-          {alertMessage}
+          {blockedWarning}
         </div>
       )}
-
-      <input
-        type="text"
-        value={input}
-        onChange={e => setInput(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && send()}
-        placeholder="Type a message!..."
-        style={{ width: '100%', padding: 8, marginTop: 8 }}
-      />
-      <button onClick={send} disabled={!input.trim()} style={{ marginTop: 8 }}>
-        Send
-      </button>
     </div>
   );
 }
