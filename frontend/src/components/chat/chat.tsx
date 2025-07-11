@@ -9,48 +9,26 @@ interface Message {
   stylingEnabled: boolean;
 }
 
-const allowedStyles = ['color', 'font-weight', 'background-color', 'text-decoration', 'font-style'];
+const ALLOWED_STYLES = ['color', 'font-weight', 'background-color', 'text-decoration', 'font-style'];
 
 export function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
   const socketRef = useRef<any>(null);
-  const alertTimeout = useRef<NodeJS.Timeout | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [allowStyling, setAllowStyling] = useState(false);
-  const [blockedWarning, setBlockedWarning] = useState<string | null>(null);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
-  // Enhanced DOMPurify config
+  // Auto-dismiss alerts after 3 seconds
   useEffect(() => {
-    const hooks = {
-      uponSanitizeAttribute: (node: any) => {
-        if (node.attrName === 'style') {
-          const blocked: string[] = [];
-          const sanitized = node.attrValue.split(';')
-            .filter((decl: string) => {
-              const [prop] = decl.split(':').map(s => s.trim().toLowerCase());
-              const allowed = allowedStyles.includes(prop);
-              if (!allowed && prop) blocked.push(prop);
-              return allowed;
-            })
-            .join('; ');
-          
-          node.attrValue = sanitized || null;
-          if (blocked.length) {
-            setBlockedWarning(`Blocked styles: ${blocked.join(', ')}`);
-            setTimeout(() => setBlockedWarning(null), 3000);
-          }
-        }
-      }
-    };
+    if (!alertMessage) return;
+    const timer = setTimeout(() => setAlertMessage(null), 3000);
+    return () => clearTimeout(timer);
+  }, [alertMessage]);
 
-    DOMPurify.addHook('uponSanitizeAttribute', hooks.uponSanitizeAttribute);
-    return () => { DOMPurify.removeHook('uponSanitizeAttribute'); };
-  }, []);
-
-  // Socket setup (unchanged from your original)
+  // Socket initialization (unchanged)
   useEffect(() => {
     let isMounted = true;
     const initSocket = async () => {
@@ -73,78 +51,131 @@ export function Chat() {
 
     initSocket();
     return () => {
+      isMounted = false;
       if (channelRef.current) channelRef.current.leave();
       if (socketRef.current) socketRef.current.disconnect();
     };
   }, [allowStyling]);
 
+  // Auto-scroll
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   const sendMessage = () => {
     if (!input.trim() || !channelRef.current) return;
 
+    // Detect blocked styles BEFORE sanitization
+    const blockedStyles: string[] = [];
+    if (allowStyling) {
+      const temp = document.createElement('div');
+      temp.innerHTML = input.trim();
+      
+      temp.querySelectorAll('[style]').forEach(el => {
+        (el.getAttribute('style') || '')
+          .split(';')
+          .map(decl => decl.trim())
+          .filter(Boolean)
+          .forEach(decl => {
+            const prop = decl.split(':')[0].trim().toLowerCase();
+            if (!ALLOWED_STYLES.includes(prop)) {
+              blockedStyles.push(prop);
+            }
+          });
+      });
+
+      if (blockedStyles.length) {
+        setAlertMessage(`Blocked styles: ${[...new Set(blockedStyles)].join(', ')}`);
+      }
+    }
+
     const newMessage = {
-      body: input.trim(),
+      body: allowStyling ? DOMPurify.sanitize(input.trim()) : input.trim(),
       timestamp: new Date().toLocaleTimeString(),
       stylingEnabled: allowStyling
     };
 
     setMessages(prev => [...prev, newMessage]);
-    channelRef.current.push("new_msg", { body: allowStyling 
-      ? DOMPurify.sanitize(input.trim())
-      : input.trim()
-    });
+    channelRef.current.push("new_msg", { body: newMessage.body });
     setInput('');
   };
 
   return (
-    <div>
-      <div ref={containerRef} style={{ height: 400, overflowY: 'auto', border: '1px solid #ccc', padding: 10 }}>
+    <div style={{ maxWidth: 600, margin: '0 auto', padding: 16 }}>
+      <div
+        ref={containerRef}
+        style={{ 
+          height: 400,
+          overflowY: 'auto',
+          border: '1px solid #ddd',
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 12,
+          backgroundColor: '#fafafa'
+        }}
+      >
         {messages.map((msg, i) => (
-          <p key={i}>
+          <div key={i} style={{ marginBottom: 8 }}>
             {msg.stylingEnabled ? (
-              <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.body) }} />
+              <span dangerouslySetInnerHTML={{ __html: msg.body }} />
             ) : (
-              <span>{msg.body}</span>
+              <span style={{ whiteSpace: 'pre-wrap' }}>{msg.body}</span>
             )}
-          </p>
+            <small style={{ display: 'block', color: '#666', marginTop: 4 }}>
+              {msg.timestamp}
+            </small>
+          </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      <input
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-        placeholder="Type a message..."
-        style={{ width: '100%', padding: 8, marginTop: 8 }}
-      />
-
-      <button 
-        onClick={() => setAllowStyling(!allowStyling)}
-        style={{ 
-          background: allowStyling ? '#4CAF50' : '#f44336',
-          color: 'white',
-          padding: '8px 16px',
-          marginTop: 8
-        }}
-      >
-        {allowStyling ? 'Styled Mode' : 'Plain Mode'}
-      </button>
-
-      {blockedWarning && (
-        <div style={{
-          position: 'fixed',
-          bottom: 20,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: '#ff4444',
-          color: 'white',
-          padding: '8px 16px',
-          borderRadius: 4
+      {alertMessage && (
+        <div style={{ 
+          marginTop: 8, 
+          padding: 8, 
+          background: '#fee', 
+          border: '1px solid #f99', 
+          borderRadius: 4, 
+          fontWeight: 'bold' 
         }}>
-          {blockedWarning}
+          {alertMessage}
         </div>
       )}
+
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+          placeholder="Type a message..."
+          style={{ flex: 1, padding: 8, borderRadius: 4, border: '1px solid #ddd' }}
+          autoFocus
+        />
+        <button
+          onClick={sendMessage}
+          disabled={!input.trim()}
+          style={{ padding: '8px 16px', borderRadius: 4, border: 'none' }}
+        >
+          Send
+        </button>
+      </div>
+
+      <button
+        onClick={() => setAllowStyling(!allowStyling)}
+        style={{
+          display: 'block',
+          marginTop: 12,
+          padding: '8px 16px',
+          background: allowStyling ? '#4CAF50' : '#f44336',
+          color: 'white',
+          border: 'none',
+          borderRadius: 4,
+          width: '100%'
+        }}
+      >
+        {allowStyling ? 'Styled Mode (ON)' : 'Plain Mode (OFF)'}
+      </button>
     </div>
   );
 }
