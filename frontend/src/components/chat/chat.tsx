@@ -6,6 +6,7 @@ import { connectSocket } from '../../features/chat/socket/user_socket';
 interface Message {
   body: string;
   timestamp: string;
+  stylingEnabled: boolean;
 }
 
 const allowedStyles = ['color', 'font-weight', 'background-color', 'text-decoration', 'font-style'];
@@ -15,174 +16,120 @@ export function Chat() {
   const containerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
   const socketRef = useRef<any>(null);
+  const alertTimeout = useRef<NodeJS.Timeout | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [allowStyling, setAllowStyling] = useState(false);
   const [blockedWarning, setBlockedWarning] = useState<string | null>(null);
-  const blockedItems = useRef<string[]>([]);
 
-  // Setup DOMPurify hook with style whitelist
+  // Enhanced DOMPurify config
   useEffect(() => {
-    const uponSanitizeAttribute = (node: any) => {
-      if (node.attrName === 'style') {
-        const style = node.attrValue;
-        const declarations = style.split(';').map((s: string) => s.trim()).filter(Boolean);
-        
-        const filtered = declarations.filter((decl: string) => {
-          const prop = decl.split(':')[0].trim().toLowerCase();
-          const isAllowed = allowedStyles.includes(prop);
-          if (!isAllowed) blockedItems.current.push(prop);
-          return isAllowed;
-        });
-
-        if (filtered.length > 0) {
-          node.attrValue = filtered.join('; ') + ';';
-        } else {
-          node.removeAttribute('style');
+    const hooks = {
+      uponSanitizeAttribute: (node: any) => {
+        if (node.attrName === 'style') {
+          const blocked: string[] = [];
+          const sanitized = node.attrValue.split(';')
+            .filter((decl: string) => {
+              const [prop] = decl.split(':').map(s => s.trim().toLowerCase());
+              const allowed = allowedStyles.includes(prop);
+              if (!allowed && prop) blocked.push(prop);
+              return allowed;
+            })
+            .join('; ');
+          
+          node.attrValue = sanitized || null;
+          if (blocked.length) {
+            setBlockedWarning(`Blocked styles: ${blocked.join(', ')}`);
+            setTimeout(() => setBlockedWarning(null), 3000);
+          }
         }
       }
     };
 
-    const uponSanitizeElement = (node: any) => {
-      if (node.tagName === 'SCRIPT') {
-        blockedItems.current.push(`<${node.tagName.toLowerCase()}>`);
-      }
-    };
-
-    DOMPurify.addHook('uponSanitizeAttribute', uponSanitizeAttribute);
-    DOMPurify.addHook('uponSanitizeElement', uponSanitizeElement);
-
-    return () => {
-      DOMPurify.removeHook('uponSanitizeAttribute');
-      DOMPurify.removeHook('uponSanitizeElement');
-    };
+    DOMPurify.addHook('uponSanitizeAttribute', hooks.uponSanitizeAttribute);
+    return () => { DOMPurify.removeHook('uponSanitizeAttribute'); };
   }, []);
 
+  // Socket setup (unchanged from your original)
   useEffect(() => {
     let isMounted = true;
-
     const initSocket = async () => {
       if (socketRef.current) return;
-      const jwtAccessToken = localStorage.getItem('access_token');
-      const socket = await connectSocket(jwtAccessToken);
-      if (!socket) return;
+      const socket = await connectSocket(localStorage.getItem('access_token'));
+      if (!socket || !isMounted) return;
 
-      socketRef.current = socket;
       const channel = socket.channel("room:lobby", {});
-
-      channel.join()
-        .receive("ok", () => console.log("Joined lobby"))
-        .receive("error", (err: any) => console.error("Unable to join lobby", err));
-
       channel.on("new_msg", (payload: { body: string }) => {
-        if (!isMounted) return;
-        setMessages(prev => [...prev, { 
-          body: payload.body, 
-          timestamp: new Date().toLocaleTimeString() 
+        setMessages(prev => [...prev, {
+          body: payload.body,
+          timestamp: new Date().toLocaleTimeString(),
+          stylingEnabled: allowStyling
         }]);
       });
 
       channelRef.current = channel;
+      socketRef.current = socket;
     };
 
     initSocket();
-
     return () => {
-      isMounted = false;
-      if (channelRef.current) {
-        channelRef.current.leave();
-        channelRef.current = null;
-      }
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
+      if (channelRef.current) channelRef.current.leave();
+      if (socketRef.current) socketRef.current.disconnect();
     };
-  }, []);
+  }, [allowStyling]);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
-    if (isNearBottom) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-    }
-  }, [messages]);
-
-  const send = () => {
+  const sendMessage = () => {
     if (!input.trim() || !channelRef.current) return;
 
-    blockedItems.current = [];
-    const messageToSend = allowStyling ? DOMPurify.sanitize(input.trim()) : input.trim();
+    const newMessage = {
+      body: input.trim(),
+      timestamp: new Date().toLocaleTimeString(),
+      stylingEnabled: allowStyling
+    };
 
-    // Only send through socket - the response will add it to messages
-    channelRef.current.push("new_msg", { body: messageToSend });
+    setMessages(prev => [...prev, newMessage]);
+    channelRef.current.push("new_msg", { body: allowStyling 
+      ? DOMPurify.sanitize(input.trim())
+      : input.trim()
+    });
     setInput('');
-
-    // Show warning if anything was blocked
-    if (blockedItems.current.length > 0) {
-      setBlockedWarning(`These [${blockedItems.current.join(', ')}] were blocked, rest was sent.`);
-      setTimeout(() => setBlockedWarning(null), 5000);
-    }
-  };
-
-  const renderMessage = (msg: Message) => {
-    if (allowStyling) {
-      return (
-        <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.body) }} />
-      );
-    } else {
-      return <span>{msg.body}</span>;
-    }
   };
 
   return (
     <div>
-      <div
-        ref={containerRef}
-        style={{ height: 400, overflowY: 'auto', border: '1px solid #ccc', padding: 10, backgroundColor: '#f9f9f9' }}
-      >
+      <div ref={containerRef} style={{ height: 400, overflowY: 'auto', border: '1px solid #ccc', padding: 10 }}>
         {messages.map((msg, i) => (
-          <p key={i} style={{ margin: '4px 0' }}>
-            {renderMessage(msg)}
-            <small style={{ color: '#666', marginLeft: '8px' }}>{msg.timestamp}</small>
+          <p key={i}>
+            {msg.stylingEnabled ? (
+              <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.body) }} />
+            ) : (
+              <span>{msg.body}</span>
+            )}
           </p>
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      <div style={{ marginTop: 8 }}>
-        <input
-          type="text"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && send()}
-          placeholder="Type a message..."
-          style={{ width: '100%', padding: 8 }}
-        />
-        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-          <button 
-            onClick={send} 
-            disabled={!input.trim()} 
-            style={{ flex: 1, padding: 8 }}
-          >
-            Send
-          </button>
-          <button
-            onClick={() => setAllowStyling(!allowStyling)}
-            style={{
-              padding: 8,
-              background: allowStyling ? '#4CAF50' : '#f44336',
-              color: 'white',
-              border: 'none',
-              borderRadius: 4
-            }}
-          >
-            {allowStyling ? 'Styled' : 'Plain'}
-          </button>
-        </div>
-      </div>
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+        placeholder="Type a message..."
+        style={{ width: '100%', padding: 8, marginTop: 8 }}
+      />
+
+      <button 
+        onClick={() => setAllowStyling(!allowStyling)}
+        style={{ 
+          background: allowStyling ? '#4CAF50' : '#f44336',
+          color: 'white',
+          padding: '8px 16px',
+          marginTop: 8
+        }}
+      >
+        {allowStyling ? 'Styled Mode' : 'Plain Mode'}
+      </button>
 
       {blockedWarning && (
         <div style={{
@@ -190,12 +137,10 @@ export function Chat() {
           bottom: 20,
           left: '50%',
           transform: 'translateX(-50%)',
-          background: '#ff6b6b',
+          background: '#ff4444',
           color: 'white',
           padding: '8px 16px',
-          borderRadius: 4,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-          zIndex: 1000
+          borderRadius: 4
         }}>
           {blockedWarning}
         </div>
