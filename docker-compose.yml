@@ -1,28 +1,23 @@
 services:
   postgres:
-    image: postgres:15-alpine
-    container_name: postgres
-    env_file:
-      - ./backend/.env
-    command: >
-      postgres
-      -c ssl=on
-      -c ssl_cert_file=/certs/server.crt
-      -c ssl_key_file=/certs/server.key
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./backend/dev_certs/server.crt:/certs/server.crt:ro
-      - ./backend/dev_certs/server.key:/certs/server.key:ro
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-    networks:
-      - betterdiscord
+      build:
+        context: ./postgres             # Custom Postgres image with TLS certs baked in
+        dockerfile: Dockerfile.postgres
+      container_name: postgres
+      env_file:
+        - ./postgres/.env               # Postgres-only credentials, kept isolated
+      volumes:
+        - pgdata:/var/lib/postgresql/data
+      ports:
+        - "5432:5432"
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+      restart: unless-stopped
+      networks:
+        - betterdiscord
       
   backend:
     container_name: backend

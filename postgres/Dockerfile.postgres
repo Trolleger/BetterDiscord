@@ -1,0 +1,15 @@
+FROM postgres:15-alpine
+
+# Copy TLS certs to /etc/postgresql (outside the data volume)
+COPY ./dev_certs/server.crt /etc/postgresql/server.crt
+COPY ./dev_certs/server.key /etc/postgresql/server.key
+
+# Copy the custom PostgreSQL config
+COPY ./postgres_config/postgresql.conf /etc/postgresql/postgresql.conf
+
+# Fix permissions on the private key so Postgres accepts it
+RUN chown postgres:postgres /etc/postgresql/server.key && \
+    chmod 600 /etc/postgresql/server.key
+
+# Start Postgres with the custom config
+CMD ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
