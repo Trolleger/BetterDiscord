@@ -1,1 +1,0 @@
-THE KEYS SELFSIGNED_KEY AND SELFSIGNED AFAIK ARE FOR DEV. MAYEB THEY ARE MAYBE NOT ALL I KNOW IS THAT I RAN THIS COMMAND openssl req -x509 -newkey rsa:4096 -keyout dev_key.pem -out dev_cert.pem -days 365 -nodes -subj "/CN=localhost"

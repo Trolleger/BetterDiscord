@@ -1,23 +1,29 @@
-FROM elixir:1.18.0-otp-27-alpine
 # TODO: Update in the future it to OTP-28, for now it has to be on 27 to not get the whole  ArgumentError: cannot escape #Reference<0.471469035.1944977410.66011>. The supported values are: lists, tuples, maps, atoms, numbers, bitstrings, PIDs and remote functions in the format &Mod.fun/arity error. So be careful! just please check it in the future, maybe like a year from now of writing this was written on. 2025-7-6
+FROM elixir:1.18.0-otp-27-alpine
 
+# Install dependencies
 RUN apk add --no-cache build-base git nodejs npm postgresql-client inotify-tools
 
-WORKDIR /app
+# Create user with matching UID/GID
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+RUN addgroup -g ${GROUP_ID} appuser && \
+    adduser -D -u ${USER_ID} -G appuser appuser
 
+WORKDIR /app
+RUN chown -R appuser:appuser /app
+
+USER appuser
+
+# Install hex and rebar
 RUN mix local.hex --force && mix local.rebar --force
 
-COPY mix.exs mix.lock ./
-RUN mix deps.get
-RUN mix deps.compile
+# Copy mix files and install dependencies
+COPY --chown=appuser:appuser mix.exs mix.lock ./
+RUN mix deps.get && mix deps.compile
 
-# Copy the certs folder from root into /app/certs inside the container
-COPY ../certs ./certs
-
-COPY . .
-
-RUN mix compile
+# Copy application code
+COPY --chown=appuser:appuser . .
 
 EXPOSE 4000
-
 CMD ["mix", "phx.server"]

@@ -1,7 +1,9 @@
 From now on you have to use Linux, if you are using windows use Ubuntu linux. (at least that's what we are doing) -Andrew
 
+
 # Step into the container
-docker exec -it cockroachdb ./cockroach sql --certs-dir=/cockroach/certs --user=root
+docker exec -it postgres psql -h localhost -U $POSTGRES_USER -d $POSTGRES_DB
+
 
 IF YOU NEED TO RUN COMMANDS IN THE CONTAINER WHILE IT IS DOWN:
 To reset shit:
