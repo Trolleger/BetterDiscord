@@ -26,4 +26,4 @@ RUN mix deps.get && mix deps.compile
 COPY --chown=appuser:appuser . .
 
 EXPOSE 4000
-CMD ["mix", "phx.server"]
+CMD ["mix", "phx.server"]   
